@@ -16,6 +16,7 @@
 		EB7A21F31A7002C700C320E7 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB7A21F21A7002C700C320E7 /* opencv2.framework */; };
 		EBB116701A792A400064C00F /* CVWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = EBB1166F1A792A400064C00F /* CVWrapper.mm */; };
 		EBB116731A7931030064C00F /* UIImageToCV.mm in Sources */ = {isa = PBXBuildFile; fileRef = EBB116721A7931030064C00F /* UIImageToCV.mm */; };
+		EBB116771A7937A20064C00F /* stiching.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB116761A7937A20064C00F /* stiching.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,8 @@
 		EBB116711A792BBC0064C00F /* CVWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CVWrapper.h; sourceTree = "<group>"; };
 		EBB116721A7931030064C00F /* UIImageToCV.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = UIImageToCV.mm; sourceTree = "<group>"; };
 		EBB116741A7931440064C00F /* UIImageToCV.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UIImageToCV.h; sourceTree = "<group>"; };
+		EBB116751A7937510064C00F /* stitching.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stitching.h; sourceTree = "<group>"; };
+		EBB116761A7937A20064C00F /* stiching.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stiching.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +98,8 @@
 				EB7A21DA1A6FF22100C320E7 /* LaunchScreen.xib */,
 				EB7A21CF1A6FF22100C320E7 /* Supporting Files */,
 				EBB1166F1A792A400064C00F /* CVWrapper.mm */,
+				EBB116751A7937510064C00F /* stitching.h */,
+				EBB116761A7937A20064C00F /* stiching.cpp */,
 				EBB1166E1A792A400064C00F /* yellow-Bridging-Header.h */,
 				EBB116711A792BBC0064C00F /* CVWrapper.h */,
 				EBB116721A7931030064C00F /* UIImageToCV.mm */,
@@ -238,6 +243,7 @@
 			files = (
 				EB7A21D41A6FF22100C320E7 /* ViewController.swift in Sources */,
 				EBB116731A7931030064C00F /* UIImageToCV.mm in Sources */,
+				EBB116771A7937A20064C00F /* stiching.cpp in Sources */,
 				EBB116701A792A400064C00F /* CVWrapper.mm in Sources */,
 				EB7A21D21A6FF22100C320E7 /* AppDelegate.swift in Sources */,
 			);
