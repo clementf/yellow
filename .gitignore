@@ -1,6 +1,4 @@
 ### Xcode ###
-yellow.xcodeproj
-frameworks/
 build/
 *.pbxuser
 !default.pbxuser
