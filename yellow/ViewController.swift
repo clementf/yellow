@@ -8,7 +8,7 @@
 
 import UIKit
 
-class SwViewController: UIViewController, UIScrollViewDelegate {
+class ViewController: UIViewController, UIScrollViewDelegate {
     
     @IBOutlet var spinner:UIActivityIndicatorView!
     @IBOutlet var imageView:UIImageView?
@@ -25,6 +25,10 @@ class SwViewController: UIViewController, UIScrollViewDelegate {
     }
     
     override func viewDidLoad() {
+        var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
+        instanceOfCustomObject.someProperty = "Hello World"
+        println(instanceOfCustomObject.someProperty)
+        instanceOfCustomObject.someMethod()
         super.viewDidLoad()
         
         // Do any additional setup after loading the view.

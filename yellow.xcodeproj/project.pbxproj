@@ -10,6 +10,7 @@
 		204105321A9CC04D0006C637 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 204105311A9CC04D0006C637 /* opencv2.framework */; };
 		204105341A9CC0760006C637 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 204105331A9CC0760006C637 /* CoreImage.framework */; };
 		204105361A9CC07F0006C637 /* libstdc++.6.0.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 204105351A9CC07F0006C637 /* libstdc++.6.0.9.dylib */; };
+		2041053A1AA493210006C637 /* ImageProcessFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 204105391AA493210006C637 /* ImageProcessFactory.mm */; };
 		EB7A21D21A6FF22100C320E7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB7A21D11A6FF22100C320E7 /* AppDelegate.swift */; };
 		EB7A21D41A6FF22100C320E7 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB7A21D31A6FF22100C320E7 /* ViewController.swift */; };
 		EB7A21D71A6FF22100C320E7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EB7A21D51A6FF22100C320E7 /* Main.storyboard */; };
@@ -32,6 +33,9 @@
 		204105311A9CC04D0006C637 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		204105331A9CC0760006C637 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		204105351A9CC07F0006C637 /* libstdc++.6.0.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.6.0.9.dylib"; path = "usr/lib/libstdc++.6.0.9.dylib"; sourceTree = SDKROOT; };
+		204105381AA493200006C637 /* yellow-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "yellow-Bridging-Header.h"; sourceTree = "<group>"; };
+		204105391AA493210006C637 /* ImageProcessFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ImageProcessFactory.mm; sourceTree = "<group>"; };
+		2041053B1AA4935A0006C637 /* ImageProcessFactory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ImageProcessFactory.hpp; sourceTree = "<group>"; };
 		EB7A21CC1A6FF22100C320E7 /* yellow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = yellow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB7A21D01A6FF22100C320E7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EB7A21D11A6FF22100C320E7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -95,6 +99,9 @@
 				EB7A21D81A6FF22100C320E7 /* Images.xcassets */,
 				EB7A21DA1A6FF22100C320E7 /* LaunchScreen.xib */,
 				EB7A21CF1A6FF22100C320E7 /* Supporting Files */,
+				204105381AA493200006C637 /* yellow-Bridging-Header.h */,
+				204105391AA493210006C637 /* ImageProcessFactory.mm */,
+				2041053B1AA4935A0006C637 /* ImageProcessFactory.hpp */,
 			);
 			path = yellow;
 			sourceTree = "<group>";
@@ -224,6 +231,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2041053A1AA493210006C637 /* ImageProcessFactory.mm in Sources */,
 				EB7A21D41A6FF22100C320E7 /* ViewController.swift in Sources */,
 				EB7A21D21A6FF22100C320E7 /* AppDelegate.swift in Sources */,
 			);
@@ -359,7 +367,7 @@
 				INFOPLIST_FILE = yellow/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "yellow/yellow-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -377,7 +385,7 @@
 				INFOPLIST_FILE = yellow/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "yellow/yellow-Bridging-Header.h";
 			};
 			name = Release;
 		};
