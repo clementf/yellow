@@ -361,7 +361,6 @@
 				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/frameworks",
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = yellow/Info.plist;
@@ -379,7 +378,6 @@
 				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/frameworks",
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = yellow/Info.plist;
