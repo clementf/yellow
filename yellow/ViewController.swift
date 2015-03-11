@@ -8,11 +8,10 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIScrollViewDelegate {
+class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate {
     
-    @IBOutlet var spinner:UIActivityIndicatorView!
-    @IBOutlet var imageView:UIImageView?
-    @IBOutlet var scrollView:UIScrollView!
+    @IBOutlet weak var imageView: UIImageView!
+    var selectedImage : UIImage!
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -25,10 +24,10 @@ class ViewController: UIViewController, UIScrollViewDelegate {
     }
     
     override func viewDidLoad() {
-        var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
+        /*var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
         instanceOfCustomObject.someProperty = "Hello World"
         println(instanceOfCustomObject.someProperty)
-        instanceOfCustomObject.someMethod()
+        instanceOfCustomObject.someMethod()*/
         super.viewDidLoad()
         
         // Do any additional setup after loading the view.
@@ -44,6 +43,21 @@ class ViewController: UIViewController, UIScrollViewDelegate {
     
     func viewForZoomingInScrollView(scrollView:UIScrollView) -> UIView {
         return self.imageView!
+    }
+    
+    @IBAction func onTakePictureTapped(sender: AnyObject) {
+        var imagePicker = UIImagePickerController()
+        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+        imagePicker.allowsEditing = false
+        imagePicker.delegate = self
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    func imagePickerController(picker: UIImagePickerController!, didFinishPickingImage image: UIImage!, editingInfo: NSDictionary!) {
+        selectedImage = image;
+        picker.dismissViewControllerAnimated(true, completion: nil);
+        
+        var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
+        imageView.image = instanceOfCustomObject.blurImage(image);
     }
     
 }

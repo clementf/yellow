@@ -7,13 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 
 @interface ImageProcessFactory : NSObject
 
-@property (strong, nonatomic) id someProperty;
+//@property (strong, nonatomic) UIImage *pickedImg;
 
-- (void) someMethod;
+- (UIImage *) blurImage:(UIImage *)pickedImage;
 
 @end
-
