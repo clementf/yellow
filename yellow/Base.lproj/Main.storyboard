@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6751" systemVersion="14D87p" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="K3v-RM-s0P">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Yellow-->
@@ -16,18 +17,18 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lOi-Lf-cJc">
-                                <rect key="frame" x="159" y="72" width="283" height="408"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="283" id="oXK-Qj-Nhy"/>
-                                    <constraint firstAttribute="height" constant="408" id="y0S-wF-788"/>
-                                </constraints>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="pano_19_16_mid" translatesAutoresizingMaskIntoConstraints="NO" id="lOi-Lf-cJc">
+                                <rect key="frame" x="16" y="72" width="568" height="520"/>
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstAttribute="centerX" secondItem="lOi-Lf-cJc" secondAttribute="centerX" id="8aA-cV-gdl"/>
-                            <constraint firstAttribute="centerY" secondItem="lOi-Lf-cJc" secondAttribute="centerY" id="CEN-3G-LjI"/>
+                            <constraint firstItem="lOi-Lf-cJc" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailingMargin" id="2Zk-rx-Ghx"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="lOi-Lf-cJc" secondAttribute="bottom" constant="8" id="Tl4-5c-UFO"/>
+                            <constraint firstAttribute="centerY" secondItem="lOi-Lf-cJc" secondAttribute="centerY" id="c8T-vx-6w3"/>
+                            <constraint firstItem="lOi-Lf-cJc" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="hhx-gk-H1A"/>
+                            <constraint firstItem="lOi-Lf-cJc" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="8" id="qNj-nm-7XD"/>
+                            <constraint firstAttribute="centerX" secondItem="lOi-Lf-cJc" secondAttribute="centerX" id="uVd-9A-TTc"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Yellow" id="Ds3-MS-tB4">
@@ -64,4 +65,7 @@
             <point key="canvasLocation" x="195" y="-466"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="pano_19_16_mid" width="720" height="960"/>
+    </resources>
 </document>
