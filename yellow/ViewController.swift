@@ -45,12 +45,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         return self.imageView!
     }
     
-    
-    
     @IBAction func onTakePictureTapped(sender: AnyObject) {
         var imagePicker = UIImagePickerController()
-        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
-        imagePicker.allowsEditing = true
+        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+        imagePicker.allowsEditing = false
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
@@ -61,7 +59,5 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
         imageView.image = instanceOfCustomObject.blurImage(image);
     }
-    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
-        picker.dismissViewControllerAnimated(true, completion: nil)
-    }
+    
 }

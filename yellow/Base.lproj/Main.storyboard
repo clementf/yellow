@@ -17,7 +17,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="pano_19_16_mid" translatesAutoresizingMaskIntoConstraints="NO" id="lOi-Lf-cJc">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="lOi-Lf-cJc">
                                 <rect key="frame" x="16" y="72" width="568" height="520"/>
                             </imageView>
                         </subviews>
@@ -65,7 +65,4 @@
             <point key="canvasLocation" x="195" y="-466"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="pano_19_16_mid" width="720" height="960"/>
-    </resources>
 </document>
