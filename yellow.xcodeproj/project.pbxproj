@@ -69,6 +69,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2027CB641AD4154700DE58B1 /* Photos */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Photos;
+			sourceTree = "<group>";
+		};
 		EB7A21C31A6FF22100C320E7 = {
 			isa = PBXGroup;
 			children = (
@@ -78,6 +85,7 @@
 				EB7A21CE1A6FF22100C320E7 /* yellow */,
 				EB7A21E41A6FF22100C320E7 /* yellowTests */,
 				EB7A21CD1A6FF22100C320E7 /* Products */,
+				2027CB641AD4154700DE58B1 /* Photos */,
 			);
 			sourceTree = "<group>";
 		};

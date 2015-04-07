@@ -1,5 +1,5 @@
 //
-//  OpenCVFactory.m
+//  ImageProcessFactory.m
 //  yellow
 //
 //  Created by Boris Moriniere on 02/03/2015.
