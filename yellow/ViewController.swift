@@ -31,7 +31,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         instanceOfCustomObject.someMethod()*/
         super.viewDidLoad()
         self.scrollView.delegate = self;
-        self.scrollView.minimumZoomScale = 1.0;
         self.scrollView.maximumZoomScale = 100.0;
         // Do any additional setup after loading the view.
     }
@@ -60,10 +59,23 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         picker.dismissViewControllerAnimated(true, completion: nil);
         
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
-        var img=instanceOfCustomObject.blurImage(image);
-        imageView.image = img
-        self.scrollView.contentSize = img.size;
+        imageView.image = image
+        
+        imageView.frame = CGRectMake(0, imageView.frame.origin.y, image.size.width, image.size.height);
+        var ratioW = self.scrollView.frame.width / image.size.width
+        var ratioH = self.scrollView.frame.height / image.size.height
+        var ratio = ratioH
+        
+        if(ratioH > ratioW){
+            ratio = ratioW
+        }
+        self.scrollView.contentSize = image.size
+        self.scrollView.minimumZoomScale = ratio
+        self.scrollView.zoomScale = ratio
+        
         
     }
+    
+    
     
 }

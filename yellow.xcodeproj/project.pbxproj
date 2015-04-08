@@ -17,6 +17,7 @@
 		EB7A21D91A6FF22100C320E7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EB7A21D81A6FF22100C320E7 /* Images.xcassets */; };
 		EB7A21DC1A6FF22100C320E7 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = EB7A21DA1A6FF22100C320E7 /* LaunchScreen.xib */; };
 		EB7A21E81A6FF22100C320E7 /* yellowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB7A21E71A6FF22100C320E7 /* yellowTests.swift */; };
+		EB91C9201AD52C4800AD58F1 /* ChoosePointerScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB91C91F1AD52C4800AD58F1 /* ChoosePointerScrollViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +47,7 @@
 		EB7A21E11A6FF22100C320E7 /* yellowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = yellowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB7A21E61A6FF22100C320E7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EB7A21E71A6FF22100C320E7 /* yellowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = yellowTests.swift; sourceTree = "<group>"; };
+		EB91C91F1AD52C4800AD58F1 /* ChoosePointerScrollViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChoosePointerScrollViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 			children = (
 				EB7A21D11A6FF22100C320E7 /* AppDelegate.swift */,
 				EB7A21D31A6FF22100C320E7 /* ViewController.swift */,
+				EB91C91F1AD52C4800AD58F1 /* ChoosePointerScrollViewController.swift */,
 				EB7A21D51A6FF22100C320E7 /* Main.storyboard */,
 				EB7A21D81A6FF22100C320E7 /* Images.xcassets */,
 				EB7A21DA1A6FF22100C320E7 /* LaunchScreen.xib */,
@@ -241,6 +244,7 @@
 			files = (
 				2041053A1AA493210006C637 /* ImageProcessFactory.mm in Sources */,
 				EB7A21D41A6FF22100C320E7 /* ViewController.swift in Sources */,
+				EB91C9201AD52C4800AD58F1 /* ChoosePointerScrollViewController.swift in Sources */,
 				EB7A21D21A6FF22100C320E7 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
