@@ -8,8 +8,9 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate {
+class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate {
     
+    @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
     var selectedImage : UIImage!
     
@@ -29,7 +30,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         println(instanceOfCustomObject.someProperty)
         instanceOfCustomObject.someMethod()*/
         super.viewDidLoad()
-        
+        self.scrollView.delegate = self;
+        self.scrollView.minimumZoomScale = 1.0;
+        self.scrollView.maximumZoomScale = 100.0;
         // Do any additional setup after loading the view.
     }
     
@@ -57,7 +60,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         picker.dismissViewControllerAnimated(true, completion: nil);
         
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
-        imageView.image = instanceOfCustomObject.blurImage(image);
+        var img=instanceOfCustomObject.blurImage(image);
+        imageView.image = img
+        self.scrollView.contentSize = img.size;
+        
     }
     
 }

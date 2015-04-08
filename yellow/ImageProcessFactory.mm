@@ -77,9 +77,8 @@ using namespace std;
 
 - (UIImage *) blurImage:(UIImage *)pickedImage{
     Mat cvPickedImg=[self cvMatFromUIImage:pickedImage];
-    Mat cvBlurredImg=cvPickedImg.clone();
-    GaussianBlur( cvPickedImg, cvBlurredImg, cv::Size( 101, 101 ), 0, 0 );
-    return [self UIImageFromCVMat:cvBlurredImg];
+    resize(cvPickedImg, cvPickedImg, cv::Size(cvPickedImg.cols/4, cvPickedImg.rows/4));
+    return [self UIImageFromCVMat:cvPickedImg];
 }
 
 @end
