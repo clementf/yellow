@@ -13,6 +13,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
     var selectedImage : UIImage!
+    var points = Array<Int>();
+    var imageProcessFactory = ImageProcessFactory();
+
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -66,6 +69,27 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         
         
     }
+
+
+
+    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+        isTouched(touches)
+    }
+
+    func isTouched(touches: NSSet!) {
+        // Get the first touch and its location in this view controller's view coordinate system
+        let touch = touches.allObjects[0] as UITouch
+        let touchLocation = touch.locationInView(self.scrollView)
+        points.append(Int(Float(touchLocation.y) / Float(self.scrollView.zoomScale)));
+        points.append(Int(Float(touchLocation.x) / Float(self.scrollView.zoomScale)));
+        
+        if(points.count == 8){
+            self.imageProcessFactory.transformPerspective(self.imageView.image, zoomScale:1, pointCoords:points);
+        }
+        
+    }
+
+
     
     
     

@@ -81,4 +81,35 @@ using namespace std;
     return [self UIImageFromCVMat:cvPickedImg];
 }
 
+- (UIImage *) transformPerspective:(UIImage *)pickedImage zoomScale:(int)scaling pointCoords:(int []) points{
+    //    vector<cv::Point2f> quad_pts;
+    //    vector<Point2f> corners;
+    //    float reduction = 1.0f / scaling;
+    //    int i = 0;
+    //    int size = 400;
+    //
+    //    for (i = 0; i < 8; i+=2){
+    //        Point2f pt = Point2f(points[i]*reduction, points[i+1]*reduction);
+    //        corners.push_back(pt);
+    //    }
+    //    quad_pts.push_back(Point2f(0, 0));
+    //    quad_pts.push_back(Point2f(size, 0));
+    //    quad_pts.push_back(Point2f(size, size));
+    //    quad_pts.push_back(Point2f(0, size));
+    //
+    //    Mat transmtx = getPerspectiveTransform(corners, quad_pts);
+    //    for (int i = 0; i < 2; i++)
+    //    {
+    //        for (int j = 0; j < 2; j++)
+    //        {
+    //            cout << transmtx.at<unsigned char>(i,j) << endl;
+    //
+    //        }
+    //    }
+    //
+    Mat cvPickedImg=[self cvMatFromUIImage:pickedImage];
+    resize(cvPickedImg, cvPickedImg, cv::Size(cvPickedImg.cols/4, cvPickedImg.rows/4));
+    return [self UIImageFromCVMat:cvPickedImg];
+}
+
 @end
