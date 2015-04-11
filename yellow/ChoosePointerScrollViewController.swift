@@ -14,8 +14,11 @@ required init(coder aDecoder: NSCoder) {
     super.init(coder: aDecoder)
 }
     
-    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
-        self.superview?.touchesBegan(touches, withEvent:event)
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+        if let touch = touches.first as? UITouch {
+            self.superview?.touchesBegan(touches, withEvent: event)
+        }
+        super.touchesBegan(touches , withEvent:event)
     }
 
 }

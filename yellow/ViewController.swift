@@ -48,7 +48,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)    }
     
-    func viewForZoomingInScrollView(scrollView:UIScrollView) -> UIView {
+    func viewForZoomingInScrollView(scrollView:UIScrollView) -> UIView? {
         return self.imageView!
     }
     
@@ -59,7 +59,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
-    func imagePickerController(picker: UIImagePickerController!, didFinishPickingImage image: UIImage!, editingInfo: NSDictionary!) {
+    func imagePickerController(picker: UIImagePickerController!, didFinishPickingImage image: UIImage!) {
         selectedImage = image;
         picker.dismissViewControllerAnimated(true, completion: nil);
         
@@ -72,20 +72,20 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
 
 
 
-    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         isTouched(touches)
     }
 
     func isTouched(touches: NSSet!) {
         // Get the first touch and its location in this view controller's view coordinate system
-        let touch = touches.allObjects[0] as UITouch
+        /*let touch = touches.allObjects[0] as UITouch
         let touchLocation = touch.locationInView(self.scrollView)
         points.append(Int(Float(touchLocation.y) / Float(self.scrollView.zoomScale)));
         points.append(Int(Float(touchLocation.x) / Float(self.scrollView.zoomScale)));
         
         if(points.count == 8){
             self.imageProcessFactory.transformPerspective(self.imageView.image, zoomScale:1, pointCoords:points);
-        }
+        }*/
         
     }
 
