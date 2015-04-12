@@ -59,12 +59,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
-    func imagePickerController(picker: UIImagePickerController!, didFinishPickingImage image: UIImage!) {
-        selectedImage = image;
+    
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
+        selectedImage = info[UIImagePickerControllerOriginalImage] as! UIImage;
         picker.dismissViewControllerAnimated(true, completion: nil);
         
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
-        imageView.image = image
+        imageView.image = selectedImage
         self.scrollView.zoomScale = 1
         
         
