@@ -111,6 +111,7 @@ using namespace std;
     for(int i=0;i<4;i++){
         Point2f pt=Point2f(c)
     }*/
+    NSLog(@"xOobj %@", points[0]);
     Mat cvPickedImg=[self cvMatFromUIImage:pickedImage];
     resize(cvPickedImg, cvPickedImg, cv::Size(cvPickedImg.cols/4, cvPickedImg.rows/4));
     return [self UIImageFromCVMat:cvPickedImg];

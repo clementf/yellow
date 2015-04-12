@@ -13,7 +13,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
     var selectedImage : UIImage!
-    var points = [Float]();
+    var points = [Int]();
     var imageProcessFactory = ImageProcessFactory();
 
     
@@ -94,13 +94,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         
             //points.append(touch)
         var location : CGPoint = touch.locationInView(imageView)
-        points.append(Float(location.x));
-        points.append(Float(location.y));
+        
         var width = CGRectGetWidth(imageView.bounds)
         var height = CGRectGetHeight(imageView.bounds)
-        if(points.count==8){
-            //self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
+        var ratioX=width/selectedImage.size.width
+        var ratioY=height/selectedImage.size.height
+        var ratio=(ratioX<ratioY) ? ratioX : ratioY
+        var marginX=(ratioX<ratioY) ? 0 : (width-selectedImage.size.width*ratio)/2
+        var marginY=(ratioX<ratioY) ? (height-selectedImage.size.height*ratio)/2 : 0
+        
+        var x=(location.x-marginX)/ratio;
+        var y=(location.y-marginY)/ratio;
+        if (x>0 && x<selectedImage.size.width && y>0 && y<selectedImage.size.height){
+            points.append(Int(x))
+            points.append(Int(y))
+            if(points.count==8){
+                NSLog("x0 \(points[0])")
+                self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
+            }
         }
+        
     }
 
 
