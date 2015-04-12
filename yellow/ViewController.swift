@@ -13,7 +13,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
     var selectedImage : UIImage!
-    var points = Array<Int>();
+    var points = [Float]();
     var imageProcessFactory = ImageProcessFactory();
 
     
@@ -70,24 +70,37 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         
         
     }
-
-
-
+    
     override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
-        isTouched(touches)
+        if let touch = touches.first as? UITouch {
+            if touch.tapCount==2{
+                NSObject.cancelPreviousPerformRequestsWithTarget(self)
+            }
+        }
     }
 
-    func isTouched(touches: NSSet!) {
+    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+        if let touch = touches.first as? UITouch{
+            if (touch.tapCount == 2) {
+                isTouched(touch)
+            }
+        }
+    }
+
+    func isTouched(touch: UITouch) {
         // Get the first touch and its location in this view controller's view coordinate system
-        /*let touch = touches.allObjects[0] as UITouch
-        let touchLocation = touch.locationInView(self.scrollView)
-        points.append(Int(Float(touchLocation.y) / Float(self.scrollView.zoomScale)));
-        points.append(Int(Float(touchLocation.x) / Float(self.scrollView.zoomScale)));
+        //points.append(Int(Float(touchLocation.y) / Float(self.scrollView.zoomScale)));
+        //points.append(Int(Float(touchLocation.x) / Float(self.scrollView.zoomScale)));
         
-        if(points.count == 8){
-            self.imageProcessFactory.transformPerspective(self.imageView.image, zoomScale:1, pointCoords:points);
-        }*/
-        
+            //points.append(touch)
+        var location : CGPoint = touch.locationInView(imageView)
+        points.append(Float(location.x));
+        points.append(Float(location.y));
+        var width = CGRectGetWidth(imageView.bounds)
+        var height = CGRectGetHeight(imageView.bounds)
+        if(points.count==8){
+            //self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
+        }
     }
 
 

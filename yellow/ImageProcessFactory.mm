@@ -81,7 +81,7 @@ using namespace std;
     return [self UIImageFromCVMat:cvPickedImg];
 }
 
-- (UIImage *) transformPerspective:(UIImage *)pickedImage zoomScale:(int)scaling pointCoords:(int []) points{
+- (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray*) points{
     //    vector<cv::Point2f> quad_pts;
     //    vector<Point2f> corners;
     //    float reduction = 1.0f / scaling;
@@ -107,6 +107,10 @@ using namespace std;
     //        }
     //    }
     //
+    /*vector<Point2f> corners;
+    for(int i=0;i<4;i++){
+        Point2f pt=Point2f(c)
+    }*/
     Mat cvPickedImg=[self cvMatFromUIImage:pickedImage];
     resize(cvPickedImg, cvPickedImg, cv::Size(cvPickedImg.cols/4, cvPickedImg.rows/4));
     return [self UIImageFromCVMat:cvPickedImg];
