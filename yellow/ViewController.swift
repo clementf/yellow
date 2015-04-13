@@ -12,7 +12,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
-    var selectedImage : UIImage!
+    var selectedImage : UIImage! = nil
     var points = [Int]();
     var imageProcessFactory = ImageProcessFactory();
 
@@ -67,7 +67,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
         imageView.image = selectedImage
         self.scrollView.zoomScale = 1
-        
+        points.removeAll()
         
     }
     
@@ -89,28 +89,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
 
     func isTouched(touch: UITouch) {
         // Get the first touch and its location in this view controller's view coordinate system
-        //points.append(Int(Float(touchLocation.y) / Float(self.scrollView.zoomScale)));
-        //points.append(Int(Float(touchLocation.x) / Float(self.scrollView.zoomScale)));
         
             //points.append(touch)
-        var location : CGPoint = touch.locationInView(imageView)
+        if selectedImage != nil && points.count<8{
+            var location : CGPoint = touch.locationInView(imageView)
         
-        var width = CGRectGetWidth(imageView.bounds)
-        var height = CGRectGetHeight(imageView.bounds)
-        var ratioX=width/selectedImage.size.width
-        var ratioY=height/selectedImage.size.height
-        var ratio=(ratioX<ratioY) ? ratioX : ratioY
-        var marginX=(ratioX<ratioY) ? 0 : (width-selectedImage.size.width*ratio)/2
-        var marginY=(ratioX<ratioY) ? (height-selectedImage.size.height*ratio)/2 : 0
+            var width = CGRectGetWidth(imageView.bounds)
+            var height = CGRectGetHeight(imageView.bounds)
+            var ratioX=width/selectedImage.size.width
+            var ratioY=height/selectedImage.size.height
+            var ratio=(ratioX<ratioY) ? ratioX : ratioY
+            var marginX=(ratioX<ratioY) ? 0 : (width-selectedImage.size.width*ratio)/2
+            var marginY=(ratioX<ratioY) ? (height-selectedImage.size.height*ratio)/2 : 0
         
-        var x=(location.x-marginX)/ratio;
-        var y=(location.y-marginY)/ratio;
-        if (x>0 && x<selectedImage.size.width && y>0 && y<selectedImage.size.height){
-            points.append(Int(x))
-            points.append(Int(y))
-            if(points.count==8){
-                NSLog("x0 \(points[0])")
-                self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
+            var x=(location.x-marginX)/ratio;
+            var y=(location.y-marginY)/ratio;
+            if (x>0 && x<selectedImage.size.width && y>0 && y<selectedImage.size.height){
+                points.append(Int(x))
+                points.append(Int(y))
+                if(points.count==8){
+                    NSLog("x0 \(points[0])")
+                    self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
+                }
             }
         }
         
