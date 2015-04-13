@@ -81,7 +81,7 @@ using namespace std;
     return [self UIImageFromCVMat:cvPickedImg];
 }
 
-- (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray*) points{
+- (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray *) points{
     //    vector<cv::Point2f> quad_pts;
     //    vector<Point2f> corners;
     //    float reduction = 1.0f / scaling;
@@ -107,14 +107,32 @@ using namespace std;
     //        }
     //    }
     //
-    /*vector<Point2f> corners;
-    for(int i=0;i<4;i++){
-        Point2f pt=Point2f(c)
-    }*/
-    NSLog(@"xOobj %@", points[0]);
-    Mat cvPickedImg=[self cvMatFromUIImage:pickedImage];
-    resize(cvPickedImg, cvPickedImg, cv::Size(cvPickedImg.cols/4, cvPickedImg.rows/4));
-    return [self UIImageFromCVMat:cvPickedImg];
+    Mat src=[self cvMatFromUIImage:pickedImage];
+    vector<Point2f> corners;
+    for(int i=0;i<8;i++){
+        float x=(float)[[points objectAtIndex:i++] intValue];
+        float y=(float)[[points objectAtIndex:i] intValue];
+        Point2f pt=Point2f(x,y);
+        corners.push_back(pt);
+    }
+    
+    cv::Rect contour=boundingRect(corners);
+    src=src(contour);
+    vector<vector<cv::Point> > c;
+    vector<cv::Point> v;
+    for (int i=0;i<corners.size();i++){
+        v.push_back(cv::Point(corners[i].x-contour.x,corners[i].y-contour.y));
+    }
+    c.push_back(v);
+    
+    Mat mask = Mat::zeros(src.rows, src.cols, CV_8UC1);
+    drawContours(mask, c, -1, Scalar(255), -1);
+    
+    Mat crop(src.rows, src.cols, CV_8UC3);
+    crop.setTo(Scalar(0,0,0));
+    src.copyTo(crop, mask);
+    
+    return [self UIImageFromCVMat:crop];
 }
 
 @end

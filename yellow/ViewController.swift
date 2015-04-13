@@ -109,7 +109,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
                 points.append(Int(y))
                 if(points.count==8){
                     NSLog("x0 \(points[0])")
-                    self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
+                    imageView.image=self.imageProcessFactory.transformPerspective(self.imageView.image, pointCoords:points);
                 }
             }
         }
