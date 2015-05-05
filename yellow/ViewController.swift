@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate {
+class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate,UIActionSheetDelegate {
     
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
@@ -53,12 +53,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     }
     
     @IBAction func onTakePictureTapped(sender: AnyObject) {
-        var imagePicker = UIImagePickerController()
-        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
-        imagePicker.allowsEditing = false
-        imagePicker.delegate = self
-        self.presentViewController(imagePicker, animated: true, completion: nil)
+        /**/
+        
+        
+        let actionSheet = UIActionSheet(title: "Choisir une photo", delegate: self, cancelButtonTitle: "Annuler", destructiveButtonTitle: nil, otherButtonTitles: "Prendre une photo", "Choisir dans la librairie")
+        
+        actionSheet.showInView(self.view)
     }
+    
+    func actionSheet(actionSheet: UIActionSheet, clickedButtonAtIndex buttonIndex: Int)
+    {
+        if(buttonIndex>0){
+            var imagePicker = UIImagePickerController()
+            imagePicker.sourceType = (buttonIndex>1 ? UIImagePickerControllerSourceType.PhotoLibrary : UIImagePickerControllerSourceType.Camera)
+            imagePicker.allowsEditing = false
+            imagePicker.delegate = self
+            self.presentViewController(imagePicker, animated: true, completion: nil)
+        }
+    }
+    
+    
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         selectedImage = info[UIImagePickerControllerOriginalImage] as! UIImage;
