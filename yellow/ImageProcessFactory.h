@@ -15,6 +15,7 @@
 //@property (strong, nonatomic) UIImage *pickedImg;
 
 - (UIImage *) blurImage:(UIImage *)pickedImage;
-- (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray *) points;
+//- (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray *) points;
+- (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points;
 
 @end

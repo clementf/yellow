@@ -81,6 +81,7 @@ using namespace std;
     return [self UIImageFromCVMat:cvPickedImg];
 }
 
+
 - (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray *) points{
     //    vector<cv::Point2f> quad_pts;
     //    vector<Point2f> corners;
@@ -134,5 +135,121 @@ using namespace std;
     
     return [self UIImageFromCVMat:crop];
 }
+
+- (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points{
+    //[self UIImageFromCVMat:cvPickedImg];
+    UIImage *imgSrc = [self transformPerspective:pickedImage pointCoords:points];
+    Mat src = [self cvMatFromUIImage:imgSrc];
+    
+    Mat seuil, blurred;
+    vector<Mat> channel(3);
+    GaussianBlur( src, blurred, cv::Size(21,21), 0, 0, BORDER_DEFAULT );
+    //blur( src, src, Size(15,15));
+    
+    split(blurred, channel);
+    Scalar tempVal = mean( channel[0] );
+    double m = tempVal.val[0];
+    double min, max;
+    minMaxLoc(src, &min, &max);
+    //NSLog(@"seuil : %f", max);
+    int s=(3*max+m)/4;
+    
+    cv::threshold(channel[0], seuil, s, 255, THRESH_BINARY);
+
+        //Seuillage manuel
+    for(int i=0;i<channel[0].rows;i++){
+        for(int j=0;j<channel[0].cols;j++){
+            if(channel[0].at<unsigned char>(i,j) >= s){
+                NSLog(@"value : %d" , channel[0].at<unsigned char>(i,j));
+            }
+            if(channel[0].at<unsigned char>(i,j) > s){
+                channel[0].at<unsigned char>(i,j) = 255;
+                
+
+            }else{
+                channel[0].at<unsigned char>(i,j) = 0;
+            }
+
+        }
+    }
+    
+    //return [self UIImageFromCVMat:channel[0]];
+    vector<vector<cv::Point> > reflets;
+    findContours(seuil, reflets, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    vector<Mat> subMats;
+    if(reflets.size()>0){
+        NSLog(@"reflets : %lu", reflets.size());
+        for(int i=0;i<reflets.size();i++){
+            for(int j=0;j<reflets[i].size();j++){
+                channel[1].at<unsigned char>(reflets[i][j])=255;
+                channel[2].at<unsigned char>(reflets[i][j])=255;
+            }
+            cv::Rect box=boundingRect(reflets[i]);
+            
+            box.x-=3*box.width;
+            box.y-=3*box.height;
+            box.width*=7;
+            box.height*=7;
+            Mat rs(src,box);
+            
+            vector<Mat> ch(3);
+            split(rs,ch);
+            // Canny( ch[0], ch[0], 20, 60, 3);
+            // ch[0].convertTo(ch[0], CV_8U);
+            // subMats.push_back(rs);
+            
+            
+            // imshow(to_string(i),rs);
+            // imshow(to_string(i + 5) ,ch[0]);
+            vector<Vec3f> circles;
+            HoughCircles( ch[0], circles, HOUGH_GRADIENT, 1, 100, 5, 10, 17, 22 );
+            
+            /// Draw the circles detected
+            for( size_t i = 0; i < circles.size(); i++ )
+            {
+                cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+                int radius = cvRound(circles[i][2]);
+                //cout<<radius<<"  center: "<<center<<endl;
+                // circle center
+                
+                center.x += box.x;
+                center.y += box.y;
+                NSLog(@"circle detected");
+                circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+                // circle outline
+                circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            }
+            //imshow("with circles", src);
+        }
+    }
+    
+    // Mat dst;
+    // merge(channel, 3, dst);
+    
+    // imshow("#tutiresoutupointes", dst);
+    Mat HSV, imgGray;
+    cv::GaussianBlur( src, blurred, cv::Size(17,17), 0, 0, BORDER_DEFAULT );
+    
+    //Find the cochon
+    
+    cv::cvtColor(blurred,HSV,COLOR_BGR2HSV);
+    inRange(HSV,cv::Scalar(0,90,60),cv::Scalar(30,255,255),imgGray);
+    vector<Vec3f> pigs;
+    HoughCircles( imgGray, pigs, HOUGH_GRADIENT, 1, 100, 5, 10, 3, 12 );
+    
+    /// Draw the circles detected
+    for( size_t i = 0; i < pigs.size(); i++ ){
+        cv::Point center(cvRound(pigs[i][0]), cvRound(pigs[i][1]));
+        int radius = cvRound(pigs[i][2]);
+        cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+        // circle outline
+        cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+        NSLog(@"pig detected");
+    }
+    //imshow("with circles and the cochon", src);
+    
+    return [self UIImageFromCVMat:src];
+}
+
 
 @end
