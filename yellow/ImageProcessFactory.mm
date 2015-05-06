@@ -75,40 +75,9 @@ using namespace std;
     return finalImage;
 }
 
-- (UIImage *) blurImage:(UIImage *)pickedImage{
-    Mat cvPickedImg=[self cvMatFromUIImage:pickedImage];
-    resize(cvPickedImg, cvPickedImg, cv::Size(cvPickedImg.cols/4, cvPickedImg.rows/4));
-    return [self UIImageFromCVMat:cvPickedImg];
-}
 
-
-- (UIImage *) transformPerspective:(UIImage *)pickedImage pointCoords:(NSArray *) points{
-    //    vector<cv::Point2f> quad_pts;
-    //    vector<Point2f> corners;
-    //    float reduction = 1.0f / scaling;
-    //    int i = 0;
-    //    int size = 400;
-    //
-    //    for (i = 0; i < 8; i+=2){
-    //        Point2f pt = Point2f(points[i]*reduction, points[i+1]*reduction);
-    //        corners.push_back(pt);
-    //    }
-    //    quad_pts.push_back(Point2f(0, 0));
-    //    quad_pts.push_back(Point2f(size, 0));
-    //    quad_pts.push_back(Point2f(size, size));
-    //    quad_pts.push_back(Point2f(0, size));
-    //
-    //    Mat transmtx = getPerspectiveTransform(corners, quad_pts);
-    //    for (int i = 0; i < 2; i++)
-    //    {
-    //        for (int j = 0; j < 2; j++)
-    //        {
-    //            cout << transmtx.at<unsigned char>(i,j) << endl;
-    //
-    //        }
-    //    }
-    //
-    Mat src=[self cvMatFromUIImage:pickedImage];
+- (Mat) crop:(Mat)pickedImage pointCoords:(NSArray *) points{
+    Mat src= pickedImage;
     vector<Point2f> corners;
     for(int i=0;i<8;i++){
         float x=(float)[[points objectAtIndex:i++] intValue];
@@ -133,62 +102,73 @@ using namespace std;
     crop.setTo(Scalar(0,0,0));
     src.copyTo(crop, mask);
     
-    return [self UIImageFromCVMat:crop];
+    return crop;
 }
 
-- (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points{
-    //[self UIImageFromCVMat:cvPickedImg];
-    UIImage *imgSrc = [self transformPerspective:pickedImage pointCoords:points];
-    Mat src = [self cvMatFromUIImage:imgSrc];
-    
+- (Mat) detectBalls:(Mat)src{
     Mat seuil, blurred;
-    vector<Mat> channel(3);
+    vector<Mat> channels(3);
     GaussianBlur( src, blurred, cv::Size(21,21), 0, 0, BORDER_DEFAULT );
-    //blur( src, src, Size(15,15));
     
-    split(blurred, channel);
-    Scalar tempVal = mean( channel[2] );
+    split(blurred, channels);
+    Scalar tempVal = mean( channels[2] );
     double m = tempVal.val[0];
     double min, max;
-    minMaxLoc(channel[2], &min, &max);
+    minMaxLoc(channels[2], &min, &max);
+    //Magic Boris
     int s=(3*max+m)/4;
-
     
-    threshold(channel[2], seuil, s, 255, THRESH_BINARY);
+    threshold(channels[2], seuil, s, 255, THRESH_BINARY);
     
-    vector<vector<cv::Point> > reflets;
-    findContours(seuil, reflets, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    vector<vector<cv::Point> > reflects;
+    findContours(seuil, reflects, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     vector<Mat> subMats;
-    if(reflets.size()>0){
-        NSLog(@"reflets : %lu", reflets.size());
-        for(int i=0;i<reflets.size();i++){
-            cv::Rect box=boundingRect(reflets[i]);
+    if(reflects.size()>0){
+        for(int i=0;i<reflects.size();i++){
+            cv::Rect box=boundingRect(reflects[i]);
             circle( src, cv::Point(box.x+box.width/2, box.y+box.height/2), 3, Scalar(0,255,0), -1, 4, 0 );
         }
     }
     
-    Mat HSV, imgGray;
+    return src;
+
+}
+
+- (Mat) detectPig:(Mat)src{
+    Mat HSV, imgGray, blurred;
     cv::GaussianBlur( src, blurred, cv::Size(17,17), 0, 0, BORDER_DEFAULT );
     
     //Find the cochon
-    
     cv::cvtColor(blurred,HSV,COLOR_RGB2HSV);
     inRange(HSV,cv::Scalar(0,90,60),cv::Scalar(30,255,255),imgGray);
     vector<Vec3f> pigs;
     HoughCircles( imgGray, pigs, HOUGH_GRADIENT, 1, 100, 5, 10, 3, 12 );
     
-    /// Draw the circles detected
+    // Draw the circle around the cochon
     for( size_t i = 0; i < pigs.size(); i++ ){
         cv::Point center(cvRound(pigs[i][0]), cvRound(pigs[i][1]));
         int radius = cvRound(pigs[i][2]);
         cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
         // circle outline
         cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
-        NSLog(@"pig detected");
     }
-    //imshow("with circles and the cochon", src);
     
-    return [self UIImageFromCVMat:src];
+    return src;
+    
+}
+
+- (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points{
+    Mat src, imgCropped, imgWithBalls, finalImg;
+    
+    src = [self cvMatFromUIImage:pickedImage];
+    //Crop the image with the points given by the user
+    imgCropped = [self crop:src pointCoords:points];
+    //Detect the balls using reflects
+    imgWithBalls = [self detectBalls:imgCropped];
+    //detect the pig
+    finalImg = [self detectPig:imgWithBalls];
+    
+    return [self UIImageFromCVMat:finalImg];
 }
 
 
