@@ -122,7 +122,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
                 points.append(Int(x))
                 points.append(Int(y))
                 if(points.count==8){
-                    NSLog("x0 \(points[0])")
                     imageView.image=self.imageProcessFactory.detection(self.imageView.image, pointCoords:points);
                 }
             }
