@@ -135,7 +135,6 @@ int size=4000;
     minMaxLoc(channels[2], &min, &max);
     //Magic Boris
     int s=(5*max+m)/6;
-    
     threshold(channels[2], seuil, s, 255, THRESH_BINARY);
     
     vector<vector<cv::Point> > reflects;
@@ -170,16 +169,31 @@ int size=4000;
             Canny( ch[2], ch[2], 20, 100, 3);
             ch[2].convertTo(ch[2], CV_8U);
             vector<Vec3f> circles;
-            HoughCircles( ch[2], circles, 3, 1, 50, 5, 10, l/3, 2*l/3 );
+            HoughCircles( ch[2], circles, 3, 1, 50, 5, 10, l/3, l/2 );
             for( size_t i = 0; i < circles.size(); i++ )
             {
                 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
                 center.x += box.x;
                 center.y += box.y;
-                
+                int radius = cvRound(circles[i][2]);
                
                 circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
-                balls.push_back(center);
+                
+                int count=0, total=0;
+                for(int j=center.y-radius; j<center.y+radius; j++){
+                    for(int k=center.x; k<center.x+radius; k++) {
+                        if(j<channels[2].rows&&k<channels[2].cols){
+                            total++;
+                        if(channels[2].at<unsigned char>(j,k)<m&&channels[2].at<unsigned char>(j,k)>0){
+                            count++;
+                        }
+                        }
+                    }
+                }
+                if(count>total/40){
+                    balls.push_back(center);
+                    cv::circle( src, center, radius, Scalar(0,255,0), 1, 3, 0 );
+                }
             }
             }
         }
@@ -293,6 +307,8 @@ int size=4000;
     finalImg = [self detectPig:imgWithBalls];
     //With order written
     order=[self searchDistances:imgCropped];
+    
+    balls.clear();
     
     return [self UIImageFromCVMat:order];
 }
