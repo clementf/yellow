@@ -12,6 +12,7 @@
 
 @interface ImageProcessFactory : NSObject
 
+
 - (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points;
 
 @end
