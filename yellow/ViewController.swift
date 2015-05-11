@@ -7,15 +7,27 @@
 //
 
 import UIKit
+import AVFoundation
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate,UIActionSheetDelegate {
+class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate,UIActionSheetDelegate, AVCaptureVideoDataOutputSampleBufferDelegate{
     
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
+    var previewView: UIView!
+    var blurEffectView: UIVisualEffectView!
     var selectedImage : UIImage! = nil
     var points = [Int]();
     var imageProcessFactory = ImageProcessFactory();
 
+    
+    //Camera Capture requiered properties
+    var videoDataOutput: AVCaptureVideoDataOutput!;
+    var videoDataOutputQueue : dispatch_queue_t!;
+    var previewLayer:AVCaptureVideoPreviewLayer!;
+    var captureDevice : AVCaptureDevice!
+    let session=AVCaptureSession();
+    var currentFrame:CIImage!
+    var done = false;
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -37,7 +49,44 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         self.scrollView.minimumZoomScale = 1
         self.scrollView.maximumZoomScale = 100.0;
         
-        // Do any additional setup after loading the view.
+        // Camera view setup
+        var screenSize = UIScreen.mainScreen().bounds.size;
+        self.previewView = UIView(frame: CGRectMake(0, 0, UIScreen.mainScreen().bounds.size.width, UIScreen.mainScreen().bounds.size.height));
+        self.previewView.contentMode = UIViewContentMode.ScaleAspectFit
+        self.view.addSubview(previewView);
+        self.setupAVCapture();
+        
+        if !UIAccessibilityIsReduceTransparencyEnabled() {
+            let blurEffect = UIBlurEffect(style: UIBlurEffectStyle.Light)
+            self.blurEffectView = UIVisualEffectView(effect: blurEffect)
+            self.blurEffectView.frame = view.bounds //view is self.view in a UIViewController
+            previewView.addSubview(blurEffectView)
+            
+            //add auto layout constraints so that the blur fills the screen upon rotating device
+            self.blurEffectView.setTranslatesAutoresizingMaskIntoConstraints(false)
+            view.addConstraint(NSLayoutConstraint(item: blurEffectView, attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: view, attribute: NSLayoutAttribute.Top, multiplier: 1, constant: 0))
+            view.addConstraint(NSLayoutConstraint(item: blurEffectView, attribute: NSLayoutAttribute.Bottom, relatedBy: NSLayoutRelation.Equal, toItem: view, attribute: NSLayoutAttribute.Bottom, multiplier: 1, constant: 0))
+            view.addConstraint(NSLayoutConstraint(item: blurEffectView, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: view, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
+            view.addConstraint(NSLayoutConstraint(item: blurEffectView, attribute: NSLayoutAttribute.Trailing, relatedBy: NSLayoutRelation.Equal, toItem: view, attribute: NSLayoutAttribute.Trailing, multiplier: 1, constant: 0))
+        }
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        if !done {
+            session.startRunning();
+        }
+    }
+    
+    
+    override func shouldAutorotate() -> Bool {
+        if (UIDevice.currentDevice().orientation == UIDeviceOrientation.LandscapeLeft ||
+            UIDevice.currentDevice().orientation == UIDeviceOrientation.LandscapeRight ||
+            UIDevice.currentDevice().orientation == UIDeviceOrientation.Unknown) {
+                return false;
+        }
+        else {
+            return true;
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -53,9 +102,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     }
     
     @IBAction func onTakePictureTapped(sender: AnyObject) {
-        /**/
-        
-        
         let actionSheet = UIActionSheet(title: "Choisir une photo", delegate: self, cancelButtonTitle: "Annuler", destructiveButtonTitle: nil, otherButtonTitles: "Prendre une photo", "Choisir dans la librairie")
         
         actionSheet.showInView(self.view)
@@ -81,6 +127,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
         imageView.image = selectedImage
         self.scrollView.zoomScale = 1
+        self.stopCamera();
         points.removeAll()
         
     }
@@ -128,9 +175,78 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         }
         
     }
+}
+// AVCaptureVideoDataOutputSampleBufferDelegate protocol and related methods
+extension ViewController:  AVCaptureVideoDataOutputSampleBufferDelegate{
+    func setupAVCapture(){
+        session.sessionPreset = AVCaptureSessionPreset640x480;
+        
+        let devices = AVCaptureDevice.devices();
+        // Loop through all the capture devices on this phone
+        for device in devices {
+            // Make sure this particular device supports video
+            if (device.hasMediaType(AVMediaTypeVideo)) {
+                // Finally check the position and confirm we've got the back camera
+                if(device.position == AVCaptureDevicePosition.Back) {
+                    captureDevice = device as? AVCaptureDevice;
+                    if captureDevice != nil {
+                        beginSession();
+                        done = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    func beginSession(){
+        var err : NSError? = nil
+        var deviceInput:AVCaptureDeviceInput = AVCaptureDeviceInput(device: captureDevice, error: &err);
+        if err != nil {
+            println("error: \(err?.localizedDescription)");
+        }
+        if self.session.canAddInput(deviceInput){
+            self.session.addInput(deviceInput);
+        }
+        
+        self.videoDataOutput = AVCaptureVideoDataOutput();
+        var rgbOutputSettings = [NSNumber(integer: kCMPixelFormat_32BGRA):kCVPixelBufferPixelFormatTypeKey];
+        self.videoDataOutput.alwaysDiscardsLateVideoFrames=true;
+        self.videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
+        self.videoDataOutput.setSampleBufferDelegate(self, queue:self.videoDataOutputQueue);
+        if session.canAddOutput(self.videoDataOutput){
+            session.addOutput(self.videoDataOutput);
+        }
+        self.videoDataOutput.connectionWithMediaType(AVMediaTypeVideo).enabled = true;
+        
+        self.previewLayer = AVCaptureVideoPreviewLayer(session: self.session);
+        self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+        
+        var rootLayer :CALayer = self.previewView.layer;
+        rootLayer.masksToBounds=true;
+        self.previewLayer.frame = rootLayer.bounds;
+        rootLayer.addSublayer(self.previewLayer);
+        session.startRunning();
+        
+    }
+    
+    func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
+        currentFrame =   self.convertImageFromCMSampleBufferRef(sampleBuffer);
+        
+        
+    }
+    
+    // clean up AVCapture
+    func stopCamera(){
+        self.previewView.removeFromSuperview()
 
-
+        session.stopRunning()
+        done = false;
+    }
     
-    
-    
+    func convertImageFromCMSampleBufferRef(sampleBuffer:CMSampleBuffer) -> CIImage{
+        let pixelBuffer:CVPixelBufferRef = CMSampleBufferGetImageBuffer(sampleBuffer);
+        var ciImage:CIImage = CIImage(CVPixelBuffer: pixelBuffer)
+        return ciImage;
+    }
 }
