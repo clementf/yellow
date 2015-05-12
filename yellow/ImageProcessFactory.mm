@@ -138,7 +138,7 @@ int size=4000;
     double min, max;
     minMaxLoc(channels[2], &min, &max);
     //Magic Boris
-    int s=(5*max+m)/6;
+    int s = max-22;//(5*max+m)/6;
     threshold(channels[2], seuil, s, 255, THRESH_BINARY);
     
     vector<vector<cv::Point> > reflects;
@@ -166,7 +166,22 @@ int size=4000;
             box.width=2*l;
             box.height=2*l;
             rectangle(src, box, Scalar(0,255,0));
-            if(box.x>=0&&box.y>=0&&(box.width+box.x)<src.cols&&(box.height+box.y)<src.rows){
+            if(box.x < 0){
+                box.width += box.x;
+                box.x=0;
+            }
+            if(box.y < 0){
+                box.height += box.y;
+                box.y = 0;
+            }
+            if(box.y + box.height > src.rows){
+                box.height = src.rows - box.y - 1;
+            }
+            if(box.x + box.width > src.cols){
+                box.width = src.cols - box.x - 1;
+            }
+            
+            //if(box.x>=0&&box.y>=0&&(box.width+box.x)<src.cols&&(box.height+box.y)<src.rows){
             Mat rs(src,box);
             Mat ch[4];
             split(rs,ch);
@@ -184,22 +199,40 @@ int size=4000;
                 circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
                 
                 int count=0, total=0;
-                for(int j=center.y-radius; j<center.y+radius; j++){
-                    for(int k=center.x; k<center.x+radius; k++) {
-                        if(j<channels[2].rows&&k<channels[2].cols){
-                            total++;
-                        if(channels[2].at<unsigned char>(j,k)<m&&channels[2].at<unsigned char>(j,k)>0){
-                            count++;
-                        }
+                //If image is clear
+                if(m > 150){
+                    for(int j=center.y-radius - 10; j<center.y+radius + 10; j++){
+                        for(int k=center.x - 10; k<center.x+radius + 10; k++) {
+                            if(j<channels[2].rows&&k<channels[2].cols){
+                                total++;
+                                if(channels[2].at<unsigned char>(j,k) < m - 20 && channels[2].at<unsigned char>(j,k) > 0){
+                                    count++;
+                                }
+                            }
                         }
                     }
                 }
-                if(count>total/40){
+                //if image is dark
+//                else{
+//                    for(int j=center.y-radius; j<center.y+radius; j++){
+//                        for(int k=center.x; k<center.x+radius; k++) {
+//                            if(j < channels[2].rows && k < channels[2].cols){
+//                                total++;
+//                                if(channels[2].at<unsigned char>(j,k) > m + 40){
+//                                    count++;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+                NSLog(@"count : %d", count);
+                NSLog(@"total : %d", total);
+                if(count>total/10 || m < 150){
                     balls.push_back(center);
                     cv::circle( src, center, radius, Scalar(0,255,0), 1, 3, 0 );
                 }
             }
-            }
+            //}
         }
     }
     
@@ -247,7 +280,7 @@ int size=4000;
     }
     vector<cv::Point2f> tempRealBalls;
     vector<cv::Point2f> tempBalls;
-    /*
+    
     for(int i=0;i<balls.size();i++){
         bool to_add=true;
         for(int j=i;j<balls.size();j++){
@@ -261,10 +294,10 @@ int size=4000;
             tempBalls.push_back(balls[i]);
         }
     }
-    balls.empty();
+    balls.clear();
     balls=tempBalls;
-    realBalls.empty();
-    realBalls=tempRealBalls;*/
+    realBalls.clear();
+    realBalls=tempRealBalls;
     
     for(int i=0;i<realBalls.size();i++){
         distances.push_back(sqrt(pow(realBalls[i].x-pig.x,2)+pow(realBalls[i].y-pig.y,2)));
@@ -275,7 +308,7 @@ int size=4000;
         order=false;
         NSLog(@"distances : %lu, balls : %lu", distances.size(), balls.size());
         for(int i=0;i<(balls.size()-1);i++){
-            NSLog(@"i %d", i);
+            //NSLog(@"i %d", i);
             if(distances[i]>distances[i+1]){
                 order=true;
                 uint d=distances[i];
@@ -293,7 +326,7 @@ int size=4000;
     }
     for(int i=0; i<balls.size();i++){
         cv::putText(src, to_string(i+1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,255), 3);
-        NSLog(@"ball %d at x %f y %f", i, balls[i].x, balls[i].y);
+        //NSLog(@"ball %d at x %f y %f", i, balls[i].x, balls[i].y);
     }
     NSLog(@"%lu balls", balls.size());
     return src;
