@@ -84,7 +84,7 @@ int size=4000;
 }
 
 
-- (Mat) crop:(Mat)pickedImage pointCoords:(NSArray *) points{
+- (vector<Mat>) crop:(Mat)pickedImage pointCoords:(NSArray *) points{
     Mat src= pickedImage;
     vector<Point2f> corners;
     for(int i=0;i<8;i++){
@@ -119,17 +119,21 @@ int size=4000;
     quad_pts.push_back(Point2f(0, size));
     transmtx = getPerspectiveTransform(corners, quad_pts);
     backTransmtx=getPerspectiveTransform(quad_pts, corners);
-    
-    return crop;
+    vector<Mat> toRet;
+    toRet.push_back(crop);
+    toRet.push_back(mask);
+    return toRet;
 }
 
-- (Mat) detectBalls:(Mat)src{
-    Mat seuil, blurred;
+- (Mat) detectBalls:(vector<Mat>)inputs{
+    Mat seuil, blurred, src, mask;
+    src = inputs.at(0);
+    mask = inputs.at(1);
     vector<Mat> channels(3);
     GaussianBlur( src, blurred, cv::Size(21,21), 0, 0, BORDER_DEFAULT );
     
     split(blurred, channels);
-    Scalar tempVal = mean( channels[2] );
+    Scalar tempVal = mean( channels[2], mask );
     double m = tempVal.val[0];
     double min, max;
     minMaxLoc(channels[2], &min, &max);
@@ -300,13 +304,13 @@ int size=4000;
     
     src = [self cvMatFromUIImage:pickedImage];
     //Crop the image with the points given by the user
-    imgCropped = [self crop:src pointCoords:points];
+    vector<Mat> rets = [self crop:src pointCoords:points];
     //Detect the balls using reflects
-    imgWithBalls = [self detectBalls:imgCropped];
+    imgWithBalls = [self detectBalls:rets];
     //detect the pig
     finalImg = [self detectPig:imgWithBalls];
     //With order written
-    order=[self searchDistances:imgCropped];
+    order=[self searchDistances:finalImg];
     
     balls.clear();
     
