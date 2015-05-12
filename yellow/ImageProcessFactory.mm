@@ -126,8 +126,9 @@ int size=4000;
 }
 
 - (Mat) detectBalls:(vector<Mat>)inputs{
-    Mat seuil, blurred, src, mask;
+    Mat seuil, blurred, src, mask, dst;
     src = inputs.at(0);
+    dst=src.clone();
     mask = inputs.at(1);
     vector<Mat> channels(3);
     GaussianBlur( src, blurred, cv::Size(21,21), 0, 0, BORDER_DEFAULT );
@@ -138,12 +139,14 @@ int size=4000;
     double min, max;
     minMaxLoc(channels[2], &min, &max);
     //Magic Boris
-    int s = max-22;//(5*max+m)/6;
+    int s = (2*max+m)/3;
     threshold(channels[2], seuil, s, 255, THRESH_BINARY);
     
     vector<vector<cv::Point> > reflects;
     findContours(seuil, reflects, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    
     vector<Mat> subMats;
+    split(src, channels);
     if(reflects.size()>0){
         for(int i=0;i<reflects.size();i++){
             cv::Rect box=boundingRect(reflects[i]);
@@ -165,7 +168,7 @@ int size=4000;
             box.y-=l;
             box.width=2*l;
             box.height=2*l;
-            rectangle(src, box, Scalar(0,255,0));
+            rectangle(dst, box, Scalar(0,255,0));
             if(box.x < 0){
                 box.width += box.x;
                 box.x=0;
@@ -188,7 +191,7 @@ int size=4000;
             Canny( ch[2], ch[2], 20, 100, 3);
             ch[2].convertTo(ch[2], CV_8U);
             vector<Vec3f> circles;
-            HoughCircles( ch[2], circles, 3, 1, 50, 5, 10, l/3, l/2 );
+            HoughCircles( ch[2], circles, 3, 1, 2*l/3, 5, 10, l/3, 2*l/3 );
             for( size_t i = 0; i < circles.size(); i++ )
             {
                 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -196,47 +199,50 @@ int size=4000;
                 center.y += box.y;
                 int radius = cvRound(circles[i][2]);
                
-                circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+                circle( dst, center, 3, Scalar(0,255,0), -1, 4, 0 );
                 
                 int count=0, total=0;
                 //If image is clear
                 if(m > 150){
+                    NSLog(@"Clear image");
                     for(int j=center.y-radius - 10; j<center.y+radius + 10; j++){
                         for(int k=center.x - 10; k<center.x+radius + 10; k++) {
                             if(j<channels[2].rows&&k<channels[2].cols){
                                 total++;
-                                if(channels[2].at<unsigned char>(j,k) < m - 20 && channels[2].at<unsigned char>(j,k) > 0){
+                                if(channels[2].at<unsigned char>(j,k) < m - 10 && channels[2].at<unsigned char>(j,k) > 0){
                                     count++;
+                                    dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
                                 }
                             }
                         }
                     }
                 }
-                //if image is dark
-//                else{
-//                    for(int j=center.y-radius; j<center.y+radius; j++){
-//                        for(int k=center.x; k<center.x+radius; k++) {
-//                            if(j < channels[2].rows && k < channels[2].cols){
-//                                total++;
-//                                if(channels[2].at<unsigned char>(j,k) > m + 40){
-//                                    count++;
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
+                //image is dark
+                else{
+                    for(int j=center.y-radius; j<center.y+radius; j++){
+                        for(int k=center.x; k<center.x+radius; k++) {
+                            if(j < channels[2].rows && k < channels[2].cols){
+                                total++;
+                                if(channels[2].at<unsigned char>(j,k) > m){
+                                    count++;
+                                    dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
+                                }
+                            }
+                        }
+                    }
+                }
                 NSLog(@"count : %d", count);
                 NSLog(@"total : %d", total);
-                if(count>total/10 || m < 150){
+                if(count>total/5){
                     balls.push_back(center);
-                    cv::circle( src, center, radius, Scalar(0,255,0), 1, 3, 0 );
+                    cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
                 }
             }
             //}
         }
     }
     
-    return src;
+    return dst;
 
 }
 
@@ -283,10 +289,10 @@ int size=4000;
     
     for(int i=0;i<balls.size();i++){
         bool to_add=true;
-        for(int j=i;j<balls.size();j++){
-            if(sqrt(pow(realBalls[i].x-realBalls[j].x,2)+pow(realBalls[i].y-realBalls[j].y,2))<40){
+        for(int j=i+1;j<balls.size();j++){
+            int d=sqrt(pow(realBalls[i].x-realBalls[j].x,2)+pow(realBalls[i].y-realBalls[j].y,2));
+            if(d<40){
                 to_add=false;
-                NSLog(@"distance %f", sqrt(pow(realBalls[i].x-realBalls[j].x,2)+pow(realBalls[i].y-realBalls[j].y,2)));
             }
         }
         if(to_add){
@@ -306,7 +312,6 @@ int size=4000;
     if(balls.size()>0){
     while(order){
         order=false;
-        NSLog(@"distances : %lu, balls : %lu", distances.size(), balls.size());
         for(int i=0;i<(balls.size()-1);i++){
             //NSLog(@"i %d", i);
             if(distances[i]>distances[i+1]){
