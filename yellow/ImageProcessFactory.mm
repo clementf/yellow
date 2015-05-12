@@ -22,6 +22,7 @@ std::vector<cv::Point2f> balls;
 cv::Mat transmtx;
 cv::Mat backTransmtx;
 int size=4000;
+int m = 0;
 
 - (Mat)cvMatFromUIImage:(UIImage *)image
 {
@@ -135,7 +136,7 @@ int size=4000;
     
     split(blurred, channels);
     Scalar tempVal = mean( channels[2], mask );
-    double m = tempVal.val[0];
+    m = tempVal.val[0];
     double min, max;
     minMaxLoc(channels[2], &min, &max);
     //Magic Boris
@@ -153,16 +154,16 @@ int size=4000;
             cv::Point center=Point2f(box.x+(box.width/2), box.y+(box.height)/2);
             double ti=transmtx.at<double>(2,0)*center.x+transmtx.at<double>(2,1)*center.y+transmtx.at<double>(2,2);
             cv::Point realCenter=cv::Point((transmtx.at<double>(0,0)*center.x+transmtx.at<double>(0,1)*center.y+transmtx.at<double>(0,2))/ti,
-                        (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
+                                           (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
             cv::Point realTopLeft=cv::Point(realCenter.x-75, realCenter.y-75);
             cv::Point realBottomRight=cv::Point(realCenter.x+75, realCenter.y+75);
             ti=backTransmtx.at<double>(2,0)*realTopLeft.x+backTransmtx.at<double>(2,1)*realTopLeft.y+backTransmtx.at<double>(2,2);
             cv::Point topLeft=cv::Point((backTransmtx.at<double>(0,0)*realTopLeft.x+backTransmtx.at<double>(0,1)*realTopLeft.y+backTransmtx.at<double>(0,2))/ti,
-                                           (backTransmtx.at<double>(1,0)*realTopLeft.x+backTransmtx.at<double>(1,1)*realTopLeft.y+backTransmtx.at<double>(1,2))/ti);
+                                        (backTransmtx.at<double>(1,0)*realTopLeft.x+backTransmtx.at<double>(1,1)*realTopLeft.y+backTransmtx.at<double>(1,2))/ti);
             ti=backTransmtx.at<double>(2,0)*realBottomRight.x+backTransmtx.at<double>(2,1)*realBottomRight.y+backTransmtx.at<double>(2,2);
             cv::Point bottomRight=cv::Point((backTransmtx.at<double>(0,0)*realBottomRight.x+backTransmtx.at<double>(0,1)*realBottomRight.y+backTransmtx.at<double>(0,2))/ti,
-                                        (backTransmtx.at<double>(1,0)*realBottomRight.x+backTransmtx.at<double>(1,1)*realBottomRight.y+backTransmtx.at<double>(1,2))/ti);
-            int l=sqrt(pow(topLeft.x-bottomRight.x, 2)+pow(topLeft.y-bottomRight.y,2))/2;
+                                            (backTransmtx.at<double>(1,0)*realBottomRight.x+backTransmtx.at<double>(1,1)*realBottomRight.y+backTransmtx.at<double>(1,2))/ti);
+            int l = sqrt(pow(topLeft.x-bottomRight.x, 2)+pow(topLeft.y-bottomRight.y,2))/2;
             
             box.x-=l;
             box.y-=l;
@@ -184,7 +185,6 @@ int size=4000;
                 box.width = src.cols - box.x - 1;
             }
             
-            //if(box.x>=0&&box.y>=0&&(box.width+box.x)<src.cols&&(box.height+box.y)<src.rows){
             Mat rs(src,box);
             Mat ch[4];
             split(rs,ch);
@@ -198,61 +198,76 @@ int size=4000;
                 center.x += box.x;
                 center.y += box.y;
                 int radius = cvRound(circles[i][2]);
-               
+                
                 circle( dst, center, 3, Scalar(0,255,0), -1, 4, 0 );
                 
                 int count=0, total=0;
                 //If image is clear
                 if(m > 150){
                     NSLog(@"Clear image");
-                    for(int j=center.y-radius - 10; j<center.y+radius + 10; j++){
-                        for(int k=center.x - 10; k<center.x+radius + 10; k++) {
+                    for(int j=center.y; j<center.y+radius; j++){
+                        for(int k=center.x - radius; k<center.x+radius; k++) {
                             if(j<channels[2].rows&&k<channels[2].cols){
                                 total++;
-                                if(channels[2].at<unsigned char>(j,k) < m - 10 && channels[2].at<unsigned char>(j,k) > 0){
+                                if(channels[2].at<unsigned char>(j,k) < m - 15 && channels[2].at<unsigned char>(j,k) > 0){
                                     count++;
                                     dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
                                 }
                             }
                         }
                     }
+                    total /=2;
                 }
                 //image is dark
                 else{
-                    for(int j=center.y-radius; j<center.y+radius; j++){
-                        for(int k=center.x; k<center.x+radius; k++) {
+                    for(int j=center.y-radius; j<center.y; j++){
+                        for(int k=center.x - radius; k<center.x+radius; k++) {
                             if(j < channels[2].rows && k < channels[2].cols){
                                 total++;
-                                if(channels[2].at<unsigned char>(j,k) > m){
+                                if(channels[2].at<unsigned char>(j,k) > m + 35){
                                     count++;
                                     dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
                                 }
                             }
                         }
                     }
+                    total /=3;
                 }
                 NSLog(@"count : %d", count);
                 NSLog(@"total : %d", total);
-                if(count>total/5){
+                if(count>total){
                     balls.push_back(center);
                     cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
                 }
             }
-            //}
         }
     }
     
     return dst;
-
+    
 }
 
 - (Mat) detectPig:(Mat)src{
     Mat HSV, imgGray, blurred;
+    vector<Mat> channels(3);
+    
     cv::GaussianBlur( src, blurred, cv::Size(17,17), 0, 0, BORDER_DEFAULT );
     
     //Find the cochon
     cv::cvtColor(blurred,HSV,COLOR_RGB2HSV);
-    inRange(HSV,cv::Scalar(0,90,60),cv::Scalar(30,255,255),imgGray);
+    
+    imgGray = Mat::zeros(HSV.rows, HSV.cols, CV_8UC1);
+    split(HSV, channels);
+    for(int j=0; j<HSV.rows; j++){
+        for(int k=0; k<HSV.cols; k++) {
+            if((channels[0].at<unsigned char>(j,k) > 160 || channels[0].at<unsigned char>(j,k) < 30) &&
+               channels[1].at<unsigned char>(j,k) > 90 &&
+               channels[2].at<unsigned char>(j,k) > 70){
+                imgGray.at<unsigned char>(j, k) = 255;
+            }
+        }
+    }
+    
     vector<Vec3f> pigs;
     HoughCircles( imgGray, pigs, HOUGH_GRADIENT, 1, 100, 5, 10, 3, 12 );
     
@@ -268,7 +283,7 @@ int size=4000;
         cv::Point center(cvRound(pigs[0][0]), cvRound(pigs[0][1]));
         double ti=transmtx.at<double>(2,0)*center.x+transmtx.at<double>(2,1)*center.y+transmtx.at<double>(2,2);
         pig=Point2f((transmtx.at<double>(0,0)*center.x+transmtx.at<double>(0,1)*center.y+transmtx.at<double>(0,2))/ti,
-                          (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
+                    (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
     }
     
     return src;
@@ -310,24 +325,24 @@ int size=4000;
     }
     bool order=true;
     if(balls.size()>0){
-    while(order){
-        order=false;
-        for(int i=0;i<(balls.size()-1);i++){
-            //NSLog(@"i %d", i);
-            if(distances[i]>distances[i+1]){
-                order=true;
-                uint d=distances[i];
-                distances[i]=distances[i+1];
-                distances[i+1]=d;
-                Point2f bf=realBalls[i];
-                realBalls[i]=realBalls[i+1];
-                realBalls[i+1]=bf;
-                cv::Point b=balls[i];
-                balls[i]=balls[i+1];
-                balls[i+1]=b;
+        while(order){
+            order=false;
+            for(int i=0;i<(balls.size()-1);i++){
+                //NSLog(@"i %d", i);
+                if(distances[i]>distances[i+1]){
+                    order=true;
+                    uint d=distances[i];
+                    distances[i]=distances[i+1];
+                    distances[i+1]=d;
+                    Point2f bf=realBalls[i];
+                    realBalls[i]=realBalls[i+1];
+                    realBalls[i+1]=bf;
+                    cv::Point b=balls[i];
+                    balls[i]=balls[i+1];
+                    balls[i+1]=b;
+                }
             }
         }
-    }
     }
     for(int i=0; i<balls.size();i++){
         cv::putText(src, to_string(i+1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,255), 3);
