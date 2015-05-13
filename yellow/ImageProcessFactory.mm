@@ -355,6 +355,9 @@ int m = 0;
 - (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points{
     Mat src, imgCropped, imgWithBalls, finalImg, order;
     
+    //Clearing old detection
+    balls.clear();
+    
     src = [self cvMatFromUIImage:pickedImage];
     //Crop the image with the points given by the user
     vector<Mat> rets = [self crop:src pointCoords:points];
@@ -364,11 +367,16 @@ int m = 0;
     finalImg = [self detectPig:imgWithBalls];
     //With order written
     order=[self searchDistances:finalImg];
-    
-    balls.clear();
+
     
     return [self UIImageFromCVMat:order];
 }
 
 
+- (CGPoint) getFirstCoordinates{
+    CGPoint point;
+    point.x = balls[0].x;
+    point.y = balls[0].y;
+    return point;
+}
 @end

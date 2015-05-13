@@ -162,7 +162,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
             var ratio=(ratioX<ratioY) ? ratioX : ratioY
             var marginX=(ratioX<ratioY) ? 0 : (width-selectedImage.size.width*ratio)/2
             var marginY=(ratioX<ratioY) ? (height-selectedImage.size.height*ratio)/2 : 0
-        
+
             var x=(location.x-marginX)/ratio;
             var y=(location.y-marginY)/ratio;
             if (x>0 && x<selectedImage.size.width && y>0 && y<selectedImage.size.height){
@@ -170,6 +170,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
                 points.append(Int(y))
                 if(points.count==8){
                     imageView.image=self.imageProcessFactory.detection(self.imageView.image, pointCoords:points);
+                    var zoomPoint:CGPoint = self.imageProcessFactory.getFirstCoordinates();
+                    
+                    width = CGRectGetWidth(imageView.bounds)
+                    height = CGRectGetHeight(imageView.bounds)
+                    ratioX=width/imageView.image!.size.width
+                    ratioY=height/imageView.image!.size.height                    
+                    var newRatio=(ratioX<ratioY) ? ratioX : ratioY
+                    marginX=(ratioX<ratioY) ? 0 : (width-imageView.image!.size.width*ratio)/2
+                    marginY=(ratioX<ratioY) ? (height-imageView.image!.size.height*ratio)/2 : 0
+                    zoomPoint.x = zoomPoint.x * newRatio + marginX
+                    zoomPoint.y = zoomPoint.y * newRatio + marginY
+                    var rectToZoom = CGRectMake(zoomPoint.x - 40, zoomPoint.y - 40, 80, 80);
+                    self.scrollView.zoomToRect(rectToZoom, animated: true)
                 }
             }
         }
