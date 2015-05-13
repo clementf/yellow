@@ -14,5 +14,6 @@
 
 
 - (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points;
+- (CGPoint) getFirstCoordinates;
 
 @end
