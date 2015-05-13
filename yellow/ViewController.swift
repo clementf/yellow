@@ -126,6 +126,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         
         var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
         imageView.image = selectedImage
+        imageView.image=self.imageProcessFactory.detection(self.imageView.image);
         self.scrollView.zoomScale = 1
         self.stopCamera();
         points.removeAll()
@@ -169,7 +170,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
                 points.append(Int(x))
                 points.append(Int(y))
                 if(points.count==8){
-                    imageView.image=self.imageProcessFactory.detection(self.imageView.image, pointCoords:points);
+                    //imageView.image=self.imageProcessFactory.detection(self.imageView.image, pointCoords:points);
                     var zoomPoint:CGPoint = self.imageProcessFactory.getFirstCoordinates();
                     
                     width = CGRectGetWidth(imageView.bounds)
@@ -186,7 +187,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
                 }
             }
         }
-        
     }
 }
 // AVCaptureVideoDataOutputSampleBufferDelegate protocol and related methods

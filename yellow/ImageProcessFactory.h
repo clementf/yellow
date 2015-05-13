@@ -13,7 +13,7 @@
 @interface ImageProcessFactory : NSObject
 
 
-- (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points;
+- (UIImage *) detection:(UIImage *)pickedImage;
 - (CGPoint) getFirstCoordinates;
 
 @end

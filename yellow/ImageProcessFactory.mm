@@ -84,16 +84,65 @@ int m = 0;
     return finalImage;
 }
 
-
-- (vector<Mat>) crop:(Mat)pickedImage pointCoords:(NSArray *) points{
-    Mat src= pickedImage;
-    vector<Point2f> corners;
-    for(int i=0;i<8;i++){
-        float x=(float)[[points objectAtIndex:i++] intValue];
-        float y=(float)[[points objectAtIndex:i] intValue];
-        Point2f pt=Point2f(x,y);
-        corners.push_back(pt);
+- (vector<Point2f>) detectMarkers:(Mat)src{
+    vector<Point2f> points;
+    Mat blurred, HSV, imgGray;
+    vector<Mat> channels;
+    
+    //H : 25 -> 35
+    //S : > 100
+    //V : > 100
+    cv::GaussianBlur( src, blurred, cv::Size(17,17), 0, 0, BORDER_DEFAULT );
+    
+    //Find the cochon
+    cv::cvtColor(blurred,HSV,COLOR_RGB2HSV);
+    
+    imgGray = Mat::zeros(HSV.rows, HSV.cols, CV_8UC1);
+    split(HSV, channels);
+    for(int j=0; j<HSV.rows; j++){
+        for(int k=0; k<HSV.cols; k++) {
+            if((channels[0].at<unsigned char>(j,k) > 25 || channels[0].at<unsigned char>(j,k) < 35) &&
+               channels[1].at<unsigned char>(j,k) > 100 &&
+               channels[2].at<unsigned char>(j,k) > 100){
+                imgGray.at<unsigned char>(j, k) = 255;
+            }
+        }
     }
+    
+    vector<vector<cv::Point> > balls;
+    findContours(imgGray, balls, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    NSLog(@"balls tennis %lu", balls.size());
+    // Check different contour and verify approximative square box around contour
+    if(balls.size()>0){
+        for(int i=0;i<balls.size();i++){
+            cv::Rect box=boundingRect(balls[i]);
+            rectangle(src, box, Scalar(0,255,0), 2);
+                cv::Point center(box.x+box.width/2, box.y+box.height/2);
+//                int radius=(box.width+box.height)/4;
+//                cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+//                cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            NSLog(@"Box height %d" , box.height);
+            NSLog(@"Box width %d" , box.width);
+            pig=Point2f(center.x ,center.y);
+            if(box.width > 23 && box.height > 23)
+                points.push_back(pig);
+            
+        }
+    }
+
+    
+    return points;
+}
+
+- (vector<Mat>) crop:(Mat)pickedImage pointCoords:(vector<Point2f>) corners{
+    Mat src= pickedImage;
+//   vector<Point2f> corners;
+//    for(int i=0;i<8;i++){
+//        float x=(float)[[points objectAtIndex:i++] intValue];
+//        float y=(float)[[points objectAtIndex:i] intValue];
+//        Point2f pt=Point2f(x,y);
+//        corners.push_back(pt);
+//    }
     
     cv::Rect contour=boundingRect(corners);
     src=src(contour);
@@ -363,13 +412,18 @@ int m = 0;
     return src;
 }
 
-- (UIImage *) detection:(UIImage *)pickedImage pointCoords:(NSArray *) points{
+- (UIImage *) detection:(UIImage *)pickedImage{
     Mat src, imgCropped, imgWithBalls, finalImg, order;
     
     //Clearing old detection
     balls.clear();
     
+    
+    
     src = [self cvMatFromUIImage:pickedImage];
+    //Detect the markers
+    
+    vector<Point2f> points = [self detectMarkers:src];
     //Crop the image with the points given by the user
     vector<Mat> rets = [self crop:src pointCoords:points];
     //Detect the balls using reflects
