@@ -155,15 +155,15 @@ int m = 0;
             double ti=transmtx.at<double>(2,0)*center.x+transmtx.at<double>(2,1)*center.y+transmtx.at<double>(2,2);
             cv::Point realCenter=cv::Point((transmtx.at<double>(0,0)*center.x+transmtx.at<double>(0,1)*center.y+transmtx.at<double>(0,2))/ti,
                                            (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
-            cv::Point realTopLeft=cv::Point(realCenter.x-75, realCenter.y-75);
-            cv::Point realBottomRight=cv::Point(realCenter.x+75, realCenter.y+75);
+            cv::Point realTopLeft=cv::Point(realCenter.x-40, realCenter.y);
+            cv::Point realBottomRight=cv::Point(realCenter.x+40, realCenter.y);
             ti=backTransmtx.at<double>(2,0)*realTopLeft.x+backTransmtx.at<double>(2,1)*realTopLeft.y+backTransmtx.at<double>(2,2);
             cv::Point topLeft=cv::Point((backTransmtx.at<double>(0,0)*realTopLeft.x+backTransmtx.at<double>(0,1)*realTopLeft.y+backTransmtx.at<double>(0,2))/ti,
                                         (backTransmtx.at<double>(1,0)*realTopLeft.x+backTransmtx.at<double>(1,1)*realTopLeft.y+backTransmtx.at<double>(1,2))/ti);
             ti=backTransmtx.at<double>(2,0)*realBottomRight.x+backTransmtx.at<double>(2,1)*realBottomRight.y+backTransmtx.at<double>(2,2);
             cv::Point bottomRight=cv::Point((backTransmtx.at<double>(0,0)*realBottomRight.x+backTransmtx.at<double>(0,1)*realBottomRight.y+backTransmtx.at<double>(0,2))/ti,
                                             (backTransmtx.at<double>(1,0)*realBottomRight.x+backTransmtx.at<double>(1,1)*realBottomRight.y+backTransmtx.at<double>(1,2))/ti);
-            int l = sqrt(pow(topLeft.x-bottomRight.x, 2)+pow(topLeft.y-bottomRight.y,2))/2;
+            int l = sqrt(pow(topLeft.x-bottomRight.x, 2)+pow(topLeft.y-bottomRight.y,2));
             
             box.x-=l;
             box.y-=l;
@@ -191,7 +191,7 @@ int m = 0;
             Canny( ch[2], ch[2], 20, 100, 3);
             ch[2].convertTo(ch[2], CV_8U);
             vector<Vec3f> circles;
-            HoughCircles( ch[2], circles, 3, 1, 2*l/3, 5, 10, l/3, 2*l/3 );
+            HoughCircles( ch[2], circles, 3, 1, 2*l/3, 5, 10, l/3, 3*l/4 );
             for( size_t i = 0; i < circles.size(); i++ )
             {
                 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -231,7 +231,7 @@ int m = 0;
                             }
                         }
                     }
-                    total /=3;
+                    total /=4;
                 }
                 NSLog(@"count : %d", count);
                 NSLog(@"total : %d", total);
@@ -268,24 +268,35 @@ int m = 0;
         }
     }
     
-    vector<Vec3f> pigs;
-    HoughCircles( imgGray, pigs, HOUGH_GRADIENT, 1, 100, 5, 10, 3, 12 );
-    
-    // Draw the circle around the cochon
-    for( size_t i = 0; i < pigs.size(); i++ ){
-        cv::Point center(cvRound(pigs[i][0]), cvRound(pigs[i][1]));
-        int radius = cvRound(pigs[i][2]);
-        cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
-        // circle outline
-        cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
-    }
+    vector<vector<cv::Point> > pigs;
+    findContours(imgGray, pigs, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    cout<<pigs.size()<<endl;
+    // Check different contour and verify approximative square box around contour
     if(pigs.size()>0){
-        cv::Point center(cvRound(pigs[0][0]), cvRound(pigs[0][1]));
-        double ti=transmtx.at<double>(2,0)*center.x+transmtx.at<double>(2,1)*center.y+transmtx.at<double>(2,2);
-        pig=Point2f((transmtx.at<double>(0,0)*center.x+transmtx.at<double>(0,1)*center.y+transmtx.at<double>(0,2))/ti,
-                    (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
+        float area=0;
+        int c=-1;
+        for(int i=0;i<pigs.size();i++){
+            cv::Rect box=boundingRect(pigs[i]);
+            if(box.width<1.5*box.height||box.width>0.6*box.height){
+                float a=box.width*box.height;
+                if(a>area){
+                    c=i;
+                }
+            }
+        }
+        cv::Rect box=boundingRect(pigs[c]);
+        rectangle(src, box, Scalar(0,255,0), 2);
+        if(c>=0){//Pig exist
+            cv::Point center(box.x+box.width/2, box.y+box.height/2);
+            int radius=(box.width+box.height)/4;
+            cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+            cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            double ti=transmtx.at<double>(2,0)*center.x+transmtx.at<double>(2,1)*center.y+transmtx.at<double>(2,2);
+            pig=Point2f((transmtx.at<double>(0,0)*center.x+transmtx.at<double>(0,1)*center.y+transmtx.at<double>(0,2))/ti,
+                        (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
+            
+        }
     }
-    
     return src;
     
 }
