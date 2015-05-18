@@ -115,7 +115,34 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         }
     }
     
-    
+    func typePositionsOnImage(inImage: UIImage, points:Array<AnyObject>)->UIImage{
+        
+        var textColor: UIColor=UIColor(red: 0, green: 0.53, blue: 0.8, alpha: 1)
+        var textFont: UIFont = UIFont(name: "Helvetica Bold", size: 40)!
+        
+        UIGraphicsBeginImageContext(inImage.size)
+        
+        //Setups up the font attributes that will be later used to dictate how the text should be drawn
+        let textFontAttributes = [
+            NSFontAttributeName: textFont,
+            NSForegroundColorAttributeName: textColor,
+        ]
+        
+        //Put the image into a rectangle as large as the original image.
+        inImage.drawInRect(CGRectMake(0, 0, inImage.size.width, inImage.size.height))
+        
+        for i in 1...points.count{
+            var point:CGPoint=points[i-1].CGPointValue()
+            var rect: CGRect = CGRectMake(point.x, point.y, inImage.size.width, inImage.size.height)
+            var drawText:NSString=NSString(format:"%d", i)
+            drawText.drawInRect(rect, withAttributes: textFontAttributes)
+        }
+        
+        var newImage: UIImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+        
+    }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         self.stopCamera()
@@ -127,27 +154,45 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         let qualityOfServiceClass = QOS_CLASS_BACKGROUND
         let backgroundQueue = dispatch_get_global_queue(qualityOfServiceClass, 0)
         dispatch_async(backgroundQueue, {
-            var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
+            self.imageProcessFactory = ImageProcessFactory()
             
-            self.selectedImage=instanceOfCustomObject.detection(self.selectedImage);
-            self.points.removeAll()
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                self.activityIndicator.stopAnimating()
-                self.imageView.image = self.selectedImage
-                var zoomPoint:CGPoint = self.imageProcessFactory.getFirstCoordinates()
-                
-                var width = CGRectGetWidth(self.imageView.bounds)
-                var height = CGRectGetHeight(self.imageView.bounds)
-                var ratioX=width/self.imageView.image!.size.width
-                var ratioY=height/self.imageView.image!.size.height
-                var ratio=(ratioX<ratioY) ? ratioX : ratioY
-                var marginX=(ratioX<ratioY) ? 0 : (width-self.imageView.image!.size.width*ratio)/2
-                var marginY=(ratioX<ratioY) ? (height-self.imageView.image!.size.height*ratio)/2 : 0
-                zoomPoint.x = zoomPoint.x * ratio + marginX
-                zoomPoint.y = zoomPoint.y * ratio + marginY
-                var rectToZoom = CGRectMake(zoomPoint.x - 40, zoomPoint.y - 40, 80, 80);
-                self.scrollView.zoomToRect(rectToZoom, animated: true)
-            })
+            self.selectedImage=self.imageProcessFactory.detection(self.selectedImage);
+            if(self.selectedImage != nil){
+                self.points.removeAll()
+                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    self.activityIndicator.stopAnimating()
+                    
+                    
+                    var pointsCoordinates:Array=self.imageProcessFactory.getAllCoordinates()
+                    self.selectedImage=self.typePositionsOnImage(self.selectedImage, points: pointsCoordinates)
+                    self.imageView.image = self.selectedImage
+                    
+                    //Zoom first ball
+                    var zoomPoint:CGPoint = pointsCoordinates[0].CGPointValue()
+                    var width = CGRectGetWidth(self.imageView.bounds)
+                    var height = CGRectGetHeight(self.imageView.bounds)
+                    var ratioX=width/self.imageView.image!.size.width
+                    var ratioY=height/self.imageView.image!.size.height
+                    var ratio=(ratioX<ratioY) ? ratioX : ratioY
+                    var marginX=(ratioX<ratioY) ? 0 : (width-self.imageView.image!.size.width*ratio)/2
+                    var marginY=(ratioX<ratioY) ? (height-self.imageView.image!.size.height*ratio)/2 : 0
+                    zoomPoint.x = zoomPoint.x * ratio + marginX
+                    zoomPoint.y = zoomPoint.y * ratio + marginY
+                    var rectToZoom = CGRectMake(zoomPoint.x - 40, zoomPoint.y - 40, 80, 80);
+                    self.scrollView.zoomToRect(rectToZoom, animated: true)
+                    
+                    
+                })
+            }
+            else{
+                var alert = UIAlertController(title: "Erreur", message: self.imageProcessFactory.getError(), preferredStyle: UIAlertControllerStyle.Alert)
+                alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+                self.presentViewController(alert, animated: true, completion: nil)
+                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    self.activityIndicator.stopAnimating()
+                })
+            }
+            
         })
     }
 }
@@ -207,8 +252,6 @@ extension ViewController:  AVCaptureVideoDataOutputSampleBufferDelegate{
     
     func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
         currentFrame =   self.convertImageFromCMSampleBufferRef(sampleBuffer);
-        
-        
     }
     
     // clean up AVCapture

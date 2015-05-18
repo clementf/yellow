@@ -20,13 +20,16 @@ using namespace std;
 //Declarations
 
 //
-Point2f pig;
+Point2f pig=Point2f(0,0);
 vector<Point2f> balls;
 Mat transmtx;
 Mat backTransmtx;
 Mat seuilTennis;
 int size=4000;
 int m = 0;
+bool debug=false;
+Mat imgCut;
+NSString *errorToReturn;
 
 - (Mat)cvMatFromUIImage:(UIImage *)image
 {
@@ -120,11 +123,13 @@ int m = 0;
     if(detections.size()>0){
         for(int i=0;i<detections.size();i++){
             cv::Rect box=boundingRect(detections[i]);
-            rectangle(src, box, Scalar(0,255,0), 2);
             cv::Point center(box.x+box.width/2, box.y+box.height/2);
             int radius=(box.width+box.height)/4;
-            cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
-            cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            if(debug){
+                rectangle(src, box, Scalar(0,255,0), 2);
+                cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+                cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            }
             tBalls.push_back(box);
             
             
@@ -181,7 +186,7 @@ int m = 0;
         points.push_back(tr);
         points.push_back(br);
         points.push_back(bl);
-        NSLog(@"points %lu", points.size());
+        if(debug) NSLog(@"points %lu", points.size());
     }
     
     
@@ -191,16 +196,10 @@ int m = 0;
 
 - (vector<Mat>) crop:(Mat)pickedImage pointCoords:(vector<Point2f>) corners{
     Mat src= pickedImage;
-    //   vector<Point2f> corners;
-    //    for(int i=0;i<8;i++){
-    //        float x=(float)[[points objectAtIndex:i++] intValue];
-    //        float y=(float)[[points objectAtIndex:i] intValue];
-    //        Point2f pt=Point2f(x,y);
-    //        corners.push_back(pt);
-    //    }
     
     cv::Rect contour=boundingRect(corners);
     src=src(contour);
+    imgCut=src.clone();
     vector<vector<cv::Point> > c;
     vector<cv::Point> v;
     for (int i=0;i<corners.size();i++){
@@ -216,6 +215,7 @@ int m = 0;
     Mat crop(src.rows, src.cols, CV_8UC3);
     crop.setTo(Scalar(0,0,0));
     src.copyTo(crop, mask);
+    
     
     std::vector<cv::Point2f> quad_pts;
     quad_pts.push_back(Point2f(0, 0));
@@ -273,7 +273,7 @@ int m = 0;
             box.y-=l;
             box.width=2*l;
             box.height=2*l;
-            rectangle(dst, box, Scalar(0,255,0));
+            if(debug) rectangle(dst, box, Scalar(0,255,0));
             if(box.x < 0){
                 box.width += box.x;
                 box.x=0;
@@ -303,19 +303,19 @@ int m = 0;
                 center.y += box.y;
                 int radius = cvRound(circles[i][2]);
                 
-                circle( dst, center, 3, Scalar(0,255,0), -1, 4, 0 );
+                if(debug) circle( dst, center, 3, Scalar(0,255,0), -1, 4, 0 );
                 
                 int count=0, total=0;
                 //If image is clear
                 if(m > 150){
-                    NSLog(@"Clear image");
+                    if(debug) NSLog(@"Clear image");
                     for(int j=center.y; j<center.y+radius; j++){
                         for(int k=center.x - radius; k<center.x+radius; k++) {
                             if(j<channels[2].rows&&k<channels[2].cols){
                                 total++;
                                 if(channels[2].at<unsigned char>(j,k) < m - 15 && channels[2].at<unsigned char>(j,k) > 0){
                                     count++;
-                                    dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
+                                    if(debug) dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
                                 }
                             }
                         }
@@ -330,7 +330,7 @@ int m = 0;
                                 total++;
                                 if(channels[2].at<unsigned char>(j,k) > m + 35){
                                     count++;
-                                    dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
+                                    if(debug) dst.at<Vec4b>(j,k)=Vec4b(0,255,0,255);
                                 }
                             }
                         }
@@ -339,7 +339,7 @@ int m = 0;
                 }
                 if(count>total){
                     balls.push_back(center);
-                    cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
+                    if(debug) cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
                 }
             }
         }
@@ -387,17 +387,25 @@ int m = 0;
             }
         }
         cv::Rect box=boundingRect(pigs[c]);
-        rectangle(src, box, Scalar(0,255,0), 2);
+        if(debug) rectangle(src, box, Scalar(0,255,0), 2);
         if(c>=0){//Pig exist
             cv::Point center(box.x+box.width/2, box.y+box.height/2);
             int radius=(box.width+box.height)/4;
-            cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
-            cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            if(debug) {
+                cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+                cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            }
             double ti=transmtx.at<double>(2,0)*center.x+transmtx.at<double>(2,1)*center.y+transmtx.at<double>(2,2);
             pig=Point2f((transmtx.at<double>(0,0)*center.x+transmtx.at<double>(0,1)*center.y+transmtx.at<double>(0,2))/ti,
                         (transmtx.at<double>(1,0)*center.x+transmtx.at<double>(1,1)*center.y+transmtx.at<double>(1,2))/ti);
             
         }
+        else{
+            pig=Point2f(0,0);
+        }
+    }
+    else{
+        pig=Point2f(0,0);
     }
     return src;
     
@@ -457,12 +465,14 @@ int m = 0;
             }
         }
     }
-    for(int i=0; i<balls.size();i++){
-        NSLog(@"Ball no %d distance %f", i+1, distances[i]/10.0);
-        cv::putText(src, to_string(i+1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,255), 3);
-        //NSLog(@"ball %d at x %f y %f", i, balls[i].x, balls[i].y);
+    if(debug){
+        for(int i=0; i<balls.size();i++){
+            NSLog(@"Ball no %d distance %f", i+1, distances[i]/10.0);
+            cv::putText(src, to_string(i+1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,255), 3);
+            //NSLog(@"ball %d at x %f y %f", i, balls[i].x, balls[i].y);
+        }
+        NSLog(@"%lu balls", balls.size());
     }
-    NSLog(@"%lu balls", balls.size());
     return src;
 }
 
@@ -482,24 +492,48 @@ int m = 0;
         
         //Crop the image with the points given by the user
         vector<Mat> rets = [self crop:src pointCoords:points];
-        //Detect the balls using reflects
-        imgWithBalls = [self detectBalls:rets];
         //detect the pig
-        finalImg = [self detectPig:imgWithBalls];
-        //With order written
-        order=[self searchDistances:finalImg];
+        finalImg = [self detectPig:rets[0]];
+        if(pig.x>0&&pig.y>0){
+            //Detect the balls using reflects
+            imgWithBalls = [self detectBalls:rets];
+            if(balls.size()>0){
+                //Order balls
+                order=[self searchDistances:finalImg];
+                return [self UIImageFromCVMat:imgCut];
+            }
+            else{
+                errorToReturn=@"Aucune boule trouvée";
+                return nil;
+            }
+        }
+        else{
+            errorToReturn=@"Cochonnet non trouvé";
+            return nil;
+        }
         
-        
-        return [self UIImageFromCVMat:order];
     }
-    else return [self UIImageFromCVMat:seuilTennis];
+    else{
+        errorToReturn = @"Repères non trouvés";
+        return nil;
+    }
 }
 
 
-- (CGPoint) getFirstCoordinates{
-    CGPoint point;
-    point.x = balls[0].x;
-    point.y = balls[0].y;
-    return point;
+
+
+- (NSArray *) getAllCoordinates{
+    NSMutableArray * p = [NSMutableArray array];
+    for(int i=0;i<balls.size();i++){
+        CGPoint c;
+        c.x=balls[i].x;
+        c.y=balls[i].y;
+        [p addObject:[NSValue valueWithCGPoint:c]];
+    }
+    return p;
+}
+
+- (NSString *) getError{
+    return errorToReturn;
 }
 @end
