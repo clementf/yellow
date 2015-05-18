@@ -21,6 +21,7 @@ cv::Point2f pig;
 std::vector<cv::Point2f> balls;
 cv::Mat transmtx;
 cv::Mat backTransmtx;
+cv::Mat seuilTennis;
 int size=4000;
 int m = 0;
 
@@ -92,7 +93,7 @@ int m = 0;
     //H : 25 -> 35
     //S : > 100
     //V : > 100
-    cv::GaussianBlur( src, blurred, cv::Size(17,17), 0, 0, BORDER_DEFAULT );
+    cv::GaussianBlur( src, blurred, cv::Size(21,21), 0, 0, BORDER_DEFAULT );
     
     //Find the cochon
     cv::cvtColor(blurred,HSV,COLOR_RGB2HSV);
@@ -101,34 +102,85 @@ int m = 0;
     split(HSV, channels);
     for(int j=0; j<HSV.rows; j++){
         for(int k=0; k<HSV.cols; k++) {
-            if((channels[0].at<unsigned char>(j,k) > 25 || channels[0].at<unsigned char>(j,k) < 35) &&
+            if((channels[0].at<unsigned char>(j,k) > 25 && channels[0].at<unsigned char>(j,k) < 45) &&
                channels[1].at<unsigned char>(j,k) > 100 &&
-               channels[2].at<unsigned char>(j,k) > 100){
+               channels[2].at<unsigned char>(j,k) > 150){
                 imgGray.at<unsigned char>(j, k) = 255;
             }
         }
     }
-    
-    vector<vector<cv::Point> > balls;
-    findContours(imgGray, balls, RETR_EXTERNAL, CHAIN_APPROX_NONE);
-    NSLog(@"balls tennis %lu", balls.size());
+    seuilTennis=imgGray.clone();
+    vector<vector<cv::Point> > detections;
+    vector<cv::Rect> tBalls;
+    findContours(imgGray, detections, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     // Check different contour and verify approximative square box around contour
-    if(balls.size()>0){
-        for(int i=0;i<balls.size();i++){
-            cv::Rect box=boundingRect(balls[i]);
-            rectangle(src, box, Scalar(0,255,0), 2);
+    if(detections.size()>0){
+        for(int i=0;i<detections.size();i++){
+            cv::Rect box=boundingRect(detections[i]);
+                rectangle(src, box, Scalar(0,255,0), 2);
                 cv::Point center(box.x+box.width/2, box.y+box.height/2);
-//                int radius=(box.width+box.height)/4;
-//                cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
-//                cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
-            NSLog(@"Box height %d" , box.height);
-            NSLog(@"Box width %d" , box.width);
-            pig=Point2f(center.x ,center.y);
-            if(box.width > 23 && box.height > 23)
-                points.push_back(pig);
+                int radius=(box.width+box.height)/4;
+                cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+                cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+                tBalls.push_back(box);
+            
             
         }
     }
+    if(tBalls.size()>=4){
+        if(tBalls.size()>4){
+            bool order=false;
+            while(!order){
+                order=true;
+                for(int i=0;i<(tBalls.size()-1);i++){
+                    //NSLog(@"i %d", i);
+                    if(tBalls[i+1].width*tBalls[i+1].height>tBalls[i].width*tBalls[i].height){
+                        order=false;
+                        cv::Rect r=tBalls[i];
+                        tBalls[i]=tBalls[i+1];
+                        tBalls[i+1]=r;
+                    }
+                }
+            }
+        }
+        cv::Point2f center(0,0);
+        for(int i=0;i<4;i++){
+            double x=tBalls[i].x+tBalls[i].width/2;
+            double y=tBalls[i].y+tBalls[i].height/2;
+            points.push_back(cv::Point2f(x, y));
+        }
+        vector<cv::Point2f> top, bot;
+        
+        bool order=false;
+        while(!order){
+            order=true;
+            for(int i=0;i<(points.size()-1);i++){
+                if(points[i].y>points[i+1].y){
+                    order=false;
+                    cv::Point2f p=points[i];
+                    points[i]=points[i+1];
+                    points[i+1]=p;
+                }
+            }
+        }
+        top.push_back(points[0]);
+        top.push_back(points[1]);
+        bot.push_back(points[2]);
+        bot.push_back(points[3]);
+        
+        cv::Point2f tl = top[0].x > top[1].x ? top[1] : top[0];
+        cv::Point2f tr = top[0].x > top[1].x ? top[0] : top[1];
+        cv::Point2f bl = bot[0].x > bot[1].x ? bot[1] : bot[0];
+        cv::Point2f br = bot[0].x > bot[1].x ? bot[0] : bot[1];
+        
+        points.clear();
+        points.push_back(tl);
+        points.push_back(tr);
+        points.push_back(br);
+        points.push_back(bl);
+        NSLog(@"points %lu", points.size());
+    }
+    
 
     
     return points;
@@ -282,8 +334,6 @@ int m = 0;
                     }
                     total /=4;
                 }
-                NSLog(@"count : %d", count);
-                NSLog(@"total : %d", total);
                 if(count>total){
                     balls.push_back(center);
                     cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
@@ -309,7 +359,7 @@ int m = 0;
     split(HSV, channels);
     for(int j=0; j<HSV.rows; j++){
         for(int k=0; k<HSV.cols; k++) {
-            if((channels[0].at<unsigned char>(j,k) > 160 || channels[0].at<unsigned char>(j,k) < 30) &&
+            if((channels[0].at<unsigned char>(j,k) > 160 || channels[0].at<unsigned char>(j,k) < 22) &&
                channels[1].at<unsigned char>(j,k) > 90 &&
                channels[2].at<unsigned char>(j,k) > 70){
                 imgGray.at<unsigned char>(j, k) = 255;
@@ -383,14 +433,14 @@ int m = 0;
     for(int i=0;i<realBalls.size();i++){
         distances.push_back(sqrt(pow(realBalls[i].x-pig.x,2)+pow(realBalls[i].y-pig.y,2)));
     }
-    bool order=true;
+    bool order=false;
     if(balls.size()>0){
-        while(order){
-            order=false;
+        while(!order){
+            order=true;
             for(int i=0;i<(balls.size()-1);i++){
                 //NSLog(@"i %d", i);
                 if(distances[i]>distances[i+1]){
-                    order=true;
+                    order=false;
                     uint d=distances[i];
                     distances[i]=distances[i+1];
                     distances[i+1]=d;
@@ -405,6 +455,7 @@ int m = 0;
         }
     }
     for(int i=0; i<balls.size();i++){
+        NSLog(@"Ball no %d distance %f", i+1, distances[i]/10.0);
         cv::putText(src, to_string(i+1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0,255,255), 3);
         //NSLog(@"ball %d at x %f y %f", i, balls[i].x, balls[i].y);
     }
@@ -424,6 +475,8 @@ int m = 0;
     //Detect the markers
     
     vector<Point2f> points = [self detectMarkers:src];
+    if(points.size()==4){
+        
     //Crop the image with the points given by the user
     vector<Mat> rets = [self crop:src pointCoords:points];
     //Detect the balls using reflects
@@ -435,6 +488,8 @@ int m = 0;
 
     
     return [self UIImageFromCVMat:order];
+    }
+    else return [self UIImageFromCVMat:seuilTennis];
 }
 
 

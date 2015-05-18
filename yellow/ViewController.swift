@@ -13,6 +13,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var previewView: UIView!
     var blurEffectView: UIVisualEffectView!
     var selectedImage : UIImage! = nil
@@ -121,16 +122,24 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
+        self.stopCamera()
+        activityIndicator.startAnimating()
         selectedImage = info[UIImagePickerControllerOriginalImage] as! UIImage;
+        imageView.image = nil
         picker.dismissViewControllerAnimated(true, completion: nil);
-        
-        var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
-        imageView.image = selectedImage
-        imageView.image=self.imageProcessFactory.detection(self.imageView.image);
-        self.scrollView.zoomScale = 1
-        self.stopCamera();
-        points.removeAll()
-        
+        let qualityOfServiceClass = QOS_CLASS_BACKGROUND
+        let backgroundQueue = dispatch_get_global_queue(qualityOfServiceClass, 0)
+        dispatch_async(backgroundQueue, {
+            var instanceOfCustomObject: ImageProcessFactory = ImageProcessFactory()
+            
+            self.selectedImage=instanceOfCustomObject.detection(self.selectedImage);
+            self.scrollView.zoomScale = 1
+            self.points.removeAll()
+            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                self.activityIndicator.stopAnimating()
+                self.imageView.image = self.selectedImage
+            })
+        })
     }
     
     override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
