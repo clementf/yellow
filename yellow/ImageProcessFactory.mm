@@ -17,11 +17,14 @@ using namespace std;
 
 @implementation ImageProcessFactory
 
-cv::Point2f pig;
-std::vector<cv::Point2f> balls;
-cv::Mat transmtx;
-cv::Mat backTransmtx;
-cv::Mat seuilTennis;
+//Declarations
+
+//
+Point2f pig;
+vector<Point2f> balls;
+Mat transmtx;
+Mat backTransmtx;
+Mat seuilTennis;
 int size=4000;
 int m = 0;
 
@@ -117,12 +120,12 @@ int m = 0;
     if(detections.size()>0){
         for(int i=0;i<detections.size();i++){
             cv::Rect box=boundingRect(detections[i]);
-                rectangle(src, box, Scalar(0,255,0), 2);
-                cv::Point center(box.x+box.width/2, box.y+box.height/2);
-                int radius=(box.width+box.height)/4;
-                cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
-                cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
-                tBalls.push_back(box);
+            rectangle(src, box, Scalar(0,255,0), 2);
+            cv::Point center(box.x+box.width/2, box.y+box.height/2);
+            int radius=(box.width+box.height)/4;
+            cv::circle( src, center, 3, Scalar(0,255,0), -1, 4, 0 );
+            cv::circle( src, center, radius, Scalar(0,0,255), 1, 3, 0 );
+            tBalls.push_back(box);
             
             
         }
@@ -181,20 +184,20 @@ int m = 0;
         NSLog(@"points %lu", points.size());
     }
     
-
+    
     
     return points;
 }
 
 - (vector<Mat>) crop:(Mat)pickedImage pointCoords:(vector<Point2f>) corners{
     Mat src= pickedImage;
-//   vector<Point2f> corners;
-//    for(int i=0;i<8;i++){
-//        float x=(float)[[points objectAtIndex:i++] intValue];
-//        float y=(float)[[points objectAtIndex:i] intValue];
-//        Point2f pt=Point2f(x,y);
-//        corners.push_back(pt);
-//    }
+    //   vector<Point2f> corners;
+    //    for(int i=0;i<8;i++){
+    //        float x=(float)[[points objectAtIndex:i++] intValue];
+    //        float y=(float)[[points objectAtIndex:i] intValue];
+    //        Point2f pt=Point2f(x,y);
+    //        corners.push_back(pt);
+    //    }
     
     cv::Rect contour=boundingRect(corners);
     src=src(contour);
@@ -477,17 +480,17 @@ int m = 0;
     vector<Point2f> points = [self detectMarkers:src];
     if(points.size()==4){
         
-    //Crop the image with the points given by the user
-    vector<Mat> rets = [self crop:src pointCoords:points];
-    //Detect the balls using reflects
-    imgWithBalls = [self detectBalls:rets];
-    //detect the pig
-    finalImg = [self detectPig:imgWithBalls];
-    //With order written
-    order=[self searchDistances:finalImg];
-
-    
-    return [self UIImageFromCVMat:order];
+        //Crop the image with the points given by the user
+        vector<Mat> rets = [self crop:src pointCoords:points];
+        //Detect the balls using reflects
+        imgWithBalls = [self detectBalls:rets];
+        //detect the pig
+        finalImg = [self detectPig:imgWithBalls];
+        //With order written
+        order=[self searchDistances:finalImg];
+        
+        
+        return [self UIImageFromCVMat:order];
     }
     else return [self UIImageFromCVMat:seuilTennis];
 }
