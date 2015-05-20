@@ -9,7 +9,7 @@
 import UIKit
 import AVFoundation
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate,UIActionSheetDelegate, AVCaptureVideoDataOutputSampleBufferDelegate{
+class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UIScrollViewDelegate, AVCaptureVideoDataOutputSampleBufferDelegate{
     
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var imageView: UIImageView!
@@ -19,7 +19,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
     var selectedImage : UIImage! = nil
     var points = [Int]();
     var imageProcessFactory = ImageProcessFactory();
-
+    
+    var picker:UIImagePickerController?=nil
+    var popover:UIPopoverController?=nil
+    
+    var photoItem: UIBarButtonItem!
     
     //Camera Capture requiered properties
     var videoDataOutput: AVCaptureVideoDataOutput!;
@@ -66,6 +70,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
             view.addConstraint(NSLayoutConstraint(item: blurEffectView, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: view, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
             view.addConstraint(NSLayoutConstraint(item: blurEffectView, attribute: NSLayoutAttribute.Trailing, relatedBy: NSLayoutRelation.Equal, toItem: view, attribute: NSLayoutAttribute.Trailing, multiplier: 1, constant: 0))
         }
+        
+        picker=UIImagePickerController()
+        picker?.delegate=self
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -98,20 +105,66 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
         return self.imageView!
     }
     
-    @IBAction func onTakePictureTapped(sender: AnyObject) {
-        let actionSheet = UIActionSheet(title: "Choisir une photo", delegate: self, cancelButtonTitle: "Annuler", destructiveButtonTitle: nil, otherButtonTitles: "Prendre une photo", "Choisir dans la librairie")
-        
-        actionSheet.showInView(self.view)
+    func openCamera()
+    {
+        if(UIImagePickerController .isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera))
+        {
+            picker!.sourceType = UIImagePickerControllerSourceType.Camera
+            self .presentViewController(picker!, animated: true, completion: nil)
+        }
+        else
+        {
+            openGallary()
+        }
+    }
+    func openGallary()
+    {
+        picker!.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+        if UIDevice.currentDevice().userInterfaceIdiom == .Phone
+        {
+            self.presentViewController(picker!, animated: true, completion: nil)
+        }
+        else
+        {
+            popover=UIPopoverController(contentViewController: picker!)
+            popover!.presentPopoverFromBarButtonItem(self.photoItem, permittedArrowDirections: UIPopoverArrowDirection.Any, animated: true)
+        }
     }
     
-    func actionSheet(actionSheet: UIActionSheet, clickedButtonAtIndex buttonIndex: Int)
-    {
-        if(buttonIndex>0){
-            var imagePicker = UIImagePickerController()
-            imagePicker.sourceType = (buttonIndex>1 ? UIImagePickerControllerSourceType.PhotoLibrary : UIImagePickerControllerSourceType.Camera)
-            imagePicker.allowsEditing = false
-            imagePicker.delegate = self
-            self.presentViewController(imagePicker, animated: true, completion: nil)
+    @IBAction func onTakePictureTapped(sender: AnyObject) {
+        
+        self.photoItem=sender as! UIBarButtonItem
+        var alert:UIAlertController=UIAlertController(title: "Choisir une image", message: nil, preferredStyle: UIAlertControllerStyle.ActionSheet)
+        
+        var cameraAction = UIAlertAction(title: "Appareil photo", style: UIAlertActionStyle.Default)
+            {
+                UIAlertAction in
+                self.openCamera()
+                
+        }
+        var gallaryAction = UIAlertAction(title: "Galerie", style: UIAlertActionStyle.Default)
+            {
+                UIAlertAction in
+                self.openGallary()
+        }
+        var cancelAction = UIAlertAction(title: "Annuler", style: UIAlertActionStyle.Cancel)
+            {
+                UIAlertAction in
+                
+        }
+        // Add the actions
+        alert.addAction(cameraAction)
+        alert.addAction(gallaryAction)
+        alert.addAction(cancelAction)
+        // Present the actionsheet
+        if UIDevice.currentDevice().userInterfaceIdiom == .Phone
+        {
+            self.presentViewController(alert, animated: true, completion: nil)
+        }
+        else
+        {
+            popover=UIPopoverController(contentViewController: alert)
+            popover!.presentPopoverFromBarButtonItem(self.photoItem, permittedArrowDirections: UIPopoverArrowDirection.Any, animated: true)
         }
     }
     
