@@ -215,25 +215,27 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate,UINaviga
                 dispatch_async(dispatch_get_main_queue(), { () -> Void in
                     self.activityIndicator.stopAnimating()
                     
-                    
                     var pointsCoordinates:Array=self.imageProcessFactory.getAllCoordinates()
-                    self.selectedImage=self.typePositionsOnImage(self.selectedImage, points: pointsCoordinates)
+                    if(pointsCoordinates.count>0){
+                        self.selectedImage=self.typePositionsOnImage(self.selectedImage, points: pointsCoordinates)
+                    }
                     self.imageView.image = self.selectedImage
                     
                     //Zoom first ball
-                    var zoomPoint:CGPoint = pointsCoordinates[0].CGPointValue()
-                    var width = CGRectGetWidth(self.imageView.bounds)
-                    var height = CGRectGetHeight(self.imageView.bounds)
-                    var ratioX=width/self.imageView.image!.size.width
-                    var ratioY=height/self.imageView.image!.size.height
-                    var ratio=(ratioX<ratioY) ? ratioX : ratioY
-                    var marginX=(ratioX<ratioY) ? 0 : (width-self.imageView.image!.size.width*ratio)/2
-                    var marginY=(ratioX<ratioY) ? (height-self.imageView.image!.size.height*ratio)/2 : 0
-                    zoomPoint.x = zoomPoint.x * ratio + marginX
-                    zoomPoint.y = zoomPoint.y * ratio + marginY
-                    var rectToZoom = CGRectMake(zoomPoint.x - 40, zoomPoint.y - 40, 80, 80);
-                    self.scrollView.zoomToRect(rectToZoom, animated: true)
-                    
+                    if(pointsCoordinates.count>0){
+                        var zoomPoint:CGPoint = pointsCoordinates[0].CGPointValue()
+                        var width = CGRectGetWidth(self.imageView.bounds)
+                        var height = CGRectGetHeight(self.imageView.bounds)
+                        var ratioX=width/self.imageView.image!.size.width
+                        var ratioY=height/self.imageView.image!.size.height
+                        var ratio=(ratioX<ratioY) ? ratioX : ratioY
+                        var marginX=(ratioX<ratioY) ? 0 : (width-self.imageView.image!.size.width*ratio)/2
+                        var marginY=(ratioX<ratioY) ? (height-self.imageView.image!.size.height*ratio)/2 : 0
+                        zoomPoint.x = zoomPoint.x * ratio + marginX
+                        zoomPoint.y = zoomPoint.y * ratio + marginY
+                        var rectToZoom = CGRectMake(zoomPoint.x - 40, zoomPoint.y - 40, 80, 80);
+                        self.scrollView.zoomToRect(rectToZoom, animated: true)
+                    }
                     
                 })
             }

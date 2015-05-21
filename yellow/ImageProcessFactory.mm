@@ -34,7 +34,7 @@ int size = 4000;
 //Mean of the image
 int m = 0;
 //Debug varriable
-bool debug = false;
+bool debug = true;
 Mat imgCut;
 //In case of error, the error is stored in this variable
 NSString *errorToReturn;
@@ -104,23 +104,32 @@ NSString *errorToReturn;
 //Detect the markers on the image with the color of the tennis balls
 - (vector<Point2f>) detectMarkers:(Mat)src{
     vector<Point2f> points;
-    Mat blurred, HSV, imgWithMarkers;
+    Mat blurred, HSV, imgWithMarkers, lowImgGray;
     vector<Mat> channels;
     
     //H : 25 -> 35
     //S : > 100
     //V : > 100
     cv::GaussianBlur( src, blurred, cv::Size(21,21), 0, 0, BORDER_DEFAULT );
-    
     cv::cvtColor(blurred,HSV,COLOR_RGB2HSV);
-    
     imgWithMarkers = Mat::zeros(HSV.rows, HSV.cols, CV_8UC1);
     split(HSV, channels);
+    
+    cv::Rect l=cv::Rect(0,HSV.rows/2, HSV.cols,HSV.rows/2);
+    cvtColor(src, lowImgGray, COLOR_RGB2GRAY);
+    lowImgGray=lowImgGray(l);
+    Scalar tempVal = mean(lowImgGray);
+    int m = tempVal.val[0];
+    int H,S,V;
+    H = m > 130 ? 38 : 45;
+    S = m > 130 ? 100 : 100;
+    V = m > 130 ? 180 : 150;
+    
     for(int j = 0; j < HSV.rows; j++){
         for(int k = 0; k < HSV.cols; k++) {
-            if((channels[0].at<unsigned char>(j,k) > 25 && channels[0].at<unsigned char>(j,k) < 45) &&
-               channels[1].at<unsigned char>(j,k) > 100 &&
-               channels[2].at<unsigned char>(j,k) > 150){
+            if((channels[0].at<unsigned char>(j,k) > 25 && channels[0].at<unsigned char>(j,k) < H) &&
+               channels[1].at<unsigned char>(j,k) > S &&
+               channels[2].at<unsigned char>(j,k) > V){
                 imgWithMarkers.at<unsigned char>(j, k) = 255;
             }
         }
@@ -271,8 +280,8 @@ NSString *errorToReturn;
             double ti = tmtx.at<double>(2,0) * center.x + tmtx.at<double>(2,1) * center.y + tmtx.at<double>(2,2);
             cv::Point realCenter = cv::Point((tmtx.at<double>(0,0) * center.x + tmtx.at<double>(0,1) * center.y + tmtx.at<double>(0,2)) / ti,
                                            (tmtx.at<double>(1,0) * center.x + tmtx.at<double>(1,1) * center.y + tmtx.at<double>(1,2)) / ti);
-            cv::Point realTopLeft = cv::Point(realCenter.x - 40, realCenter.y);
-            cv::Point realBottomRight = cv::Point(realCenter.x + 40, realCenter.y);
+            cv::Point realTopLeft = cv::Point(realCenter.x - 40, realCenter.y - 40);
+            cv::Point realBottomRight = cv::Point(realCenter.x + 40, realCenter.y + 40);
             ti = backTmtx.at<double>(2,0) * realTopLeft.x + backTmtx.at<double>(2,1) * realTopLeft.y + backTmtx.at<double>(2,2);
             cv::Point topLeft = cv::Point((backTmtx.at<double>(0,0) * realTopLeft.x + backTmtx.at<double>(0,1) * realTopLeft.y + backTmtx.at<double>(0,2)) / ti,
                                         (backTmtx.at<double>(1,0) * realTopLeft.x + backTmtx.at<double>(1,1) * realTopLeft.y + backTmtx.at<double>(1,2)) / ti);
@@ -281,8 +290,8 @@ NSString *errorToReturn;
                                             (backTmtx.at<double>(1,0) * realBottomRight.x + backTmtx.at<double>(1,1) * realBottomRight.y + backTmtx.at<double>(1,2)) / ti);
             int l = sqrt(pow(topLeft.x - bottomRight.x, 2) + pow(topLeft.y - bottomRight.y, 2));
             
-            box.x -= l;
-            box.y -= l;
+            box.x += box.width / 2 - l;
+            box.y += box.height / 2 - l;
             box.width = 2 * l;
             box.height = 2 * l;
             if(debug) rectangle(dst, box, Scalar(0, 255, 0));
@@ -509,35 +518,34 @@ NSString *errorToReturn;
     
     //Detect the markers and reduce the size of the photo
     vector<Point2f> points = [self detectMarkers:src];
-    
     if(points.size() == 4){
         
         //Crop the image with the points given by the user
         vector<Mat> rets = [self crop:src pointCoords:points];
         //detect the pig
-        finalImg = [self detectPig:rets[0]];
+        rets[0] = [self detectPig:rets[0]];
         if(pig.x > 0 && pig.y > 0){
             //Detect the balls using reflects
             imgWithBalls = [self detectBalls:rets];
             if(balls.size() > 0){
                 //Order balls
-                order = [self searchDistances:finalImg];
-                return [self UIImageFromCVMat:imgCut];
+                order = [self searchDistances:imgWithBalls];
+                return debug? [self UIImageFromCVMat:order] : [self UIImageFromCVMat:imgCut];
             }
             else{
                 errorToReturn = @"Aucune boule trouvée";
-                return nil;
+                return debug? [self UIImageFromCVMat:imgWithBalls]:nil;
             }
         }
         else{
             errorToReturn = @"Cochonnet non trouvé";
-            return nil;
+            return debug? [self UIImageFromCVMat:imgWithBalls]:nil;
         }
         
     }
     else{
         errorToReturn = @"Repères non trouvés";
-        return nil;
+        return debug? [self UIImageFromCVMat:thresholdTennis]:nil;
     }
 }
 
