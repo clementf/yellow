@@ -290,10 +290,12 @@ NSString *errorToReturn;
                                             (backTmtx.at<double>(1,0) * realBottomRight.x + backTmtx.at<double>(1,1) * realBottomRight.y + backTmtx.at<double>(1,2)) / ti);
             int l = sqrt(pow(topLeft.x - bottomRight.x, 2) + pow(topLeft.y - bottomRight.y, 2));
             
-            box.x += box.width / 2 - l;
-            box.y += box.height / 2 - l;
-            box.width = 2 * l;
-            box.height = 2 * l;
+            
+            
+            box.x += box.width / 2 - l/2;
+            box.y += box.height / 2 - l/2;
+            box.width = l;
+            box.height = l;
             if(debug) rectangle(dst, box, Scalar(0, 255, 0));
             if(box.x < 0){
                 box.width += box.x;
@@ -316,7 +318,7 @@ NSString *errorToReturn;
             Canny( ch[2], ch[2], 20, 100, 3);
             ch[2].convertTo(ch[2], CV_8U);
             vector<Vec3f> circles;
-            HoughCircles( ch[2], circles, 3, 1, 2 * l / 3, 5, 10, l / 3, 3 * l / 4 );
+            HoughCircles( ch[2], circles, 3, 1, l/2 /* minDist */, 5, 10, l / 4, 2 * l / 3 );
             for( size_t i = 0; i < circles.size(); i++ )
             {
                 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -341,7 +343,7 @@ NSString *errorToReturn;
                             }
                         }
                     }
-                    total /= 2;
+                    total /= 3;
                 }
                 //image is dark
                 else{
@@ -383,9 +385,9 @@ NSString *errorToReturn;
     split(HSV, channels);
     for(int j = 0; j < HSV.rows; j++){
         for(int k = 0; k < HSV.cols; k++) {
-            if((channels[0].at<unsigned char>(j,k) > 160 || channels[0].at<unsigned char>(j,k) < 22) &&
-               channels[1].at<unsigned char>(j,k) > 90 &&
-               channels[2].at<unsigned char>(j,k) > 70){
+            if((channels[0].at<unsigned char>(j,k) > 160 || channels[0].at<unsigned char>(j,k) < 10) &&
+               channels[1].at<unsigned char>(j,k) > 70 &&
+               channels[2].at<unsigned char>(j,k) > 100){
                 imgGray.at<unsigned char>(j, k) = 255;
             }
         }
