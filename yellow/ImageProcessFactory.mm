@@ -34,7 +34,7 @@ int size = 4000;
 //Mean of the image
 int m = 0;
 //Debug varriable
-bool debug = true;
+bool debug = false;
 Mat imgCut;
 //In case of error, the error is stored in this variable
 NSString *errorToReturn;
@@ -265,7 +265,8 @@ NSString *errorToReturn;
     double min, max;
     minMaxLoc(channels[2], &min, &max);
     //Magic Boris
-    int s = (2 * max + m) / 3;
+    
+    int s = m>130 ? (2*max + m ) / 3 : (max + m) / 2;
     threshold(channels[2], seuil, s, 255, THRESH_BINARY);
     
     vector<vector<cv::Point> > reflects;
@@ -280,8 +281,8 @@ NSString *errorToReturn;
             double ti = tmtx.at<double>(2,0) * center.x + tmtx.at<double>(2,1) * center.y + tmtx.at<double>(2,2);
             cv::Point realCenter = cv::Point((tmtx.at<double>(0,0) * center.x + tmtx.at<double>(0,1) * center.y + tmtx.at<double>(0,2)) / ti,
                                            (tmtx.at<double>(1,0) * center.x + tmtx.at<double>(1,1) * center.y + tmtx.at<double>(1,2)) / ti);
-            cv::Point realTopLeft = cv::Point(realCenter.x - 40, realCenter.y - 40);
-            cv::Point realBottomRight = cv::Point(realCenter.x + 40, realCenter.y + 40);
+            cv::Point realTopLeft = cv::Point(realCenter.x - 50, realCenter.y - 50);
+            cv::Point realBottomRight = cv::Point(realCenter.x + 50, realCenter.y + 50);
             ti = backTmtx.at<double>(2,0) * realTopLeft.x + backTmtx.at<double>(2,1) * realTopLeft.y + backTmtx.at<double>(2,2);
             cv::Point topLeft = cv::Point((backTmtx.at<double>(0,0) * realTopLeft.x + backTmtx.at<double>(0,1) * realTopLeft.y + backTmtx.at<double>(0,2)) / ti,
                                         (backTmtx.at<double>(1,0) * realTopLeft.x + backTmtx.at<double>(1,1) * realTopLeft.y + backTmtx.at<double>(1,2)) / ti);
@@ -292,10 +293,10 @@ NSString *errorToReturn;
             
             
             
-            box.x += box.width / 2 - l/2;
-            box.y += box.height / 2 - l/2;
-            box.width = l;
-            box.height = l;
+            box.x += box.width / 2 - l;
+            box.y += box.height / 2 - l;
+            box.width = 2*l;
+            box.height = 2*l;
             if(debug) rectangle(dst, box, Scalar(0, 255, 0));
             if(box.x < 0){
                 box.width += box.x;
@@ -318,7 +319,7 @@ NSString *errorToReturn;
             Canny( ch[2], ch[2], 20, 100, 3);
             ch[2].convertTo(ch[2], CV_8U);
             vector<Vec3f> circles;
-            HoughCircles( ch[2], circles, 3, 1, l/2 /* minDist */, 5, 10, l / 4, 2 * l / 3 );
+            HoughCircles( ch[2], circles, 3, 1, l /* minDist */, 5, 10, l / 3, 2 * l / 3 );
             for( size_t i = 0; i < circles.size(); i++ )
             {
                 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -326,11 +327,11 @@ NSString *errorToReturn;
                 center.y += box.y;
                 int radius = cvRound(circles[i][2]);
                 
-                if(debug) circle( dst, center, 3, Scalar(0,255,0), -1, 4, 0 );
-                
+                if(debug) circle( dst, center, 3, Scalar(255,0,0), -1, 4, 0 );
+                if(debug) cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
                 int count = 0, total = 0;
                 //If image is clear
-                if(m > 150){
+                if(m > 130){
                     if(debug) NSLog(@"Clear image");
                     for(int j = center.y; j < center.y + radius; j++){
                         for(int k = center.x - radius; k < center.x + radius; k++) {
@@ -358,11 +359,11 @@ NSString *errorToReturn;
                             }
                         }
                     }
-                    total /= 4;
+                    total /= 8;
                 }
                 if(count>total){
                     balls.push_back(center);
-                    if(debug) cv::circle( dst, center, radius, Scalar(0,255,0), 1, 3, 0 );
+                    
                 }
             }
         }
@@ -410,13 +411,13 @@ NSString *errorToReturn;
             }
         }
         cv::Rect box = boundingRect(pigs[c]);
-        if(debug) rectangle(src, box, Scalar(0,255,0), 2);
+        //if(debug) rectangle(src, box, Scalar(0,255,0), 2);
         if(c >= 0){//Pig exist
             cv::Point center(box.x+box.width / 2, box.y+box.height / 2);
             int radius = (box.width+box.height) / 4;
             if(debug) {
-                cv::circle( src, center, 3, Scalar(0, 255, 0), -1, 4, 0 );
-                cv::circle( src, center, radius, Scalar(0, 0, 255), 1, 3, 0 );
+                //cv::circle( src, center, 3, Scalar(0, 255, 0), -1, 4, 0 );
+                //cv::circle( src, center, radius, Scalar(0, 0, 255), 1, 3, 0 );
             }
             double ti = tmtx.at<double>(2,0) * center.x + tmtx.at<double>(2,1) * center.y + tmtx.at<double>(2,2);
             pig=Point2f((tmtx.at<double>(0,0) * center.x + tmtx.at<double>(0,1) * center.y + tmtx.at<double>(0,2)) / ti,
@@ -492,7 +493,7 @@ NSString *errorToReturn;
         for(int i = 0; i < balls.size(); i++){
             if(debug) NSLog(@"Ball no %d distance %f", i + 1, distances[i] / 10.0);
             
-            cv::putText(src, to_string(i + 1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 255), 3);
+            //cv::putText(src, to_string(i + 1), balls[i], FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 255), 3);
             
         }
         if(debug) NSLog(@"%lu balls", balls.size());
